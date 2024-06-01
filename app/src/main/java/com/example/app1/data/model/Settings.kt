@@ -5,14 +5,12 @@ import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
 
 @Entity(
-    tableName = "journal_entries",
+    tableName = "settings",
     foreignKeys = [ForeignKey(entity = User::class, parentColumns = ["userId"], childColumns = ["userId"], onDelete = ForeignKey.CASCADE)]
 )
-data class JournalEntry(
-    @PrimaryKey(autoGenerate = true) val entryId: Int = 0,
+data class Settings(
+    @PrimaryKey(autoGenerate = true) val settingsId: Int = 0,
     val userId: Int,
-    val title: String,
-    val content: String,
-    val date: Long = System.currentTimeMillis(),
-    val isEdited: Boolean = false
+    val theme: String,
+    val notificationsEnabled: Boolean
 )
