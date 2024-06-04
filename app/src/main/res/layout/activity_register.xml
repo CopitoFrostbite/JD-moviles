@@ -4,176 +4,134 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/login"
     tools:context=".ui.MainActivity">
-
-
-
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="10dp">
-
-        <androidx.cardview.widget.CardView
-            android:id="@+id/card_view"
+        android:background="@color/myPrimary"
+        android:alpha="0.7"/>
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        app:cardCornerRadius="28dp"
+        android:layout_marginBottom="-20dp"
+        >
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="28dp">
-
-            <LinearLayout
+            android:orientation="vertical"
+            android:padding="28dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Crea una cuenta para comenzar"
+                android:alpha="0.7"
+                />
+            <View
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nombre(s)"
+                android:alpha="0.7"
+                android:textStyle="bold"
+                />
+            <EditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="28dp">
+                android:inputType="textPersonName"/>
+            <View
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Apellidos"
+                android:alpha="0.7"
+                android:textStyle="bold"
+                />
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName"/>
+            <View
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Correo electrónico"
+                android:alpha="0.7"
+                android:textStyle="bold"
+                />
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textEmailAddress"/>
+            <View
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nombre de usuario"
+                android:alpha="0.7"
+                android:textStyle="bold"
+                />
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"/>
+            <View
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Contraseña"
+                android:alpha="0.7"
+                android:textStyle="bold"
+                />
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Registrate"
-                    android:textColor="@color/my_primary"
-                    android:textSize="32sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:alpha="0.7"
-                    android:text="Crea una cuenta para empezar a usar JournalDay" />
-
-                <View
-                    android:layout_width="wrap_content"
-                    android:layout_height="30dp" />
-
-
-
-                <ScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fillViewport="true">
-
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:alpha="0.7"
-                            android:text="Nombre completo"
-                            android:textStyle="bold" />
-                        <EditText
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textPersonName" />
-                        <View
-                            android:layout_width="wrap_content"
-                            android:layout_height="20dp" />
-
-
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:alpha="0.7"
-                            android:text="Correo electrónico"
-                            android:textStyle="bold" />
-                        <EditText
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textEmailAddress" />
-                        <View
-                            android:layout_width="wrap_content"
-                            android:layout_height="20dp" />
-
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:alpha="0.7"
-                            android:text="Fecha de nacimiento"
-                            android:textStyle="bold" />
-                        <EditText
-                            android:id="@+id/userDate"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="date"
-                            android:focusable="false"
-                            android:clickable="true"
-                            android:maxLines="1" />
-                        <View
-                            android:layout_width="wrap_content"
-                            android:layout_height="20dp" />
-
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:alpha="0.7"
-                            android:text="Contraseña"
-                            android:textStyle="bold" />
-                        <EditText
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textPassword" />
-                        <View
-                            android:layout_width="wrap_content"
-                            android:layout_height="10dp" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:alpha="0.7"
-                            android:text="Repetir contraseña"
-                            android:textStyle="bold" />
-                        <EditText
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textPassword" />
-                        <View
-                            android:layout_width="wrap_content"
-                            android:layout_height="10dp" />
-
-
-                    </LinearLayout>
-
-                </ScrollView>
-
-
-
-                <com.google.android.material.button.MaterialButton
-                    android:layout_width="match_parent"
-                    android:layout_height="60dp"
-                    android:text="Registrarse"
-                    app:cornerRadius="32dp" />
-
-                <View
-                    android:layout_width="wrap_content"
-                    android:layout_height="10dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:alpha="0.7"
-                    android:text="¿Ya tienes una cuenta? Inicia sesión"
-                    android:padding="20dp"
-                    android:id="@+id/textViewLogin"
-                    android:onClick="textViewClicked"
-                    />
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="horizontal">
-                </LinearLayout>
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-    </LinearLayout>
-
-
+            <View
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Repite tu contraseña"
+                android:alpha="0.7"
+                android:textStyle="bold"
+                />
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"/>
+            <View
+                android:layout_width="wrap_content"
+                android:layout_height="10dp"/>
+            <com.google.android.material.button.MaterialButton
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:text="Registrarse"
+                android:backgroundTint="@color/myPrimary"
+                app:cornerRadius="32dp" />
+            <View
+                android:layout_width="wrap_content"
+                android:layout_height="10dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="¿Ya tienes una cuenta? Iniciar sesión"
+                android:layout_gravity="center"
+                android:alpha="0.7"/>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
 </RelativeLayout>
