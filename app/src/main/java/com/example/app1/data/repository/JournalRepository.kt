@@ -1,17 +1,25 @@
 package com.example.app1.data.repository
 
+import androidx.lifecycle.LiveData
 import com.example.app1.data.local.JournalEntryDao
 import com.example.app1.data.remote.JournalApiService
 import com.example.app1.data.model.JournalEntry
+import retrofit2.Response
+import javax.inject.Inject
 
-class JournalRepository(
-    private val journalEntryDao: JournalEntryDao,
-    private val journalApiService: JournalApiService
+class JournalEntryRepository @Inject constructor(
+    private val api: JournalApiService,
+    private val journalEntryDao: JournalEntryDao
 ) {
-    // Local data functions
-    suspend fun getJournalEntries() = journalEntryDao.getAllEntries()
-    suspend fun addJournalEntry(entry: JournalEntry) = journalEntryDao.insert(entry)
+    suspend fun createEntry(entry: JournalEntry): Response<JournalEntry> {
+        return api.createEntry(entry)
+    }
 
-    // Remote data functions (if needed)
-    // suspend fun fetchJournalEntriesFromApi() = journalApiService.getJournalEntries()
+    fun getEntriesByUserId(userId: Int): LiveData<List<JournalEntry>> {
+        return journalEntryDao.getEntriesByUserId(userId)
+    }
+
+    suspend fun getEntriesByUserIdFromApi(userId: Int): Response<List<JournalEntry>> {
+        return api.getEntriesByUserId(userId)
+    }
 }
