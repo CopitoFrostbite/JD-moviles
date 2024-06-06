@@ -5,12 +5,11 @@ import android.widget.Button
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.widget.TextView
-<<<<<<< HEAD
-import com.example.app1.JournalHome
-import com.example.app1.MyJournals
-import com.example.app1.NewJournal
-=======
->>>>>>> fb2b97034cad762f1fab3833115dd9fb915447c5
+
+//import com.example.app1.JournalHome
+//import com.example.app1.MyJournals
+//import com.example.app1.NewJournal
+
 import com.example.app1.R
 import com.example.app1.UserProfile
 import dagger.hilt.android.AndroidEntryPoint
