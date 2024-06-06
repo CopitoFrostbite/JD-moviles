@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_new_journal"
+        android:title="Nuevo Diario" />
+    <item
+        android:id="@+id/nav_my_journals"
+        android:title="Mis Diarios" />
+    <item
+        android:id="@+id/nav_profile"
+        android:title="Ver Mi Perfil" />
+    <item
+        android:id="@+id/nav_logout"
+        android:title="Cerrar Sesión" />
+</menu>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="50dp"
+    tools:context=".NewJournal">
+
+    <EditText
+        android:id="@+id/etJournalTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Título del diario"
+        android:padding="10dp"
+        android:textColor="@color/mySecondary"
+        android:background="?attr/selectableItemBackground"
+        android:layout_marginBottom="16dp"/>
+    <EditText
+        android:id="@+id/etJournalContent"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:hint="Contenido del diario"
+        android:padding="10dp"
+        android:textColor="@color/mySecondary"
+        android:background="?attr/selectableItemBackground"
+        android:gravity="top"
+        android:layout_marginBottom="16dp"/>
+    <Spinner
+        android:id="@+id/spinnerEmotion"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"/>
+    <Button
+        android:id="@+id/btnSaveJournal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Guardar Diario"
+        android:background="@color/myPrimary"
+        android:textAllCaps="false"/>
+    
+    
+
+
+    
+    
+
+</LinearLayout>
