@@ -4,10 +4,7 @@ import android.os.Bundle
 import android.widget.Button
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
-import com.example.app1.Pantalla2
 import android.widget.TextView
-import com.example.app1.JournalHome
-import com.example.app1.MyJournals
 import com.example.app1.R
 import dagger.hilt.android.AndroidEntryPoint
 

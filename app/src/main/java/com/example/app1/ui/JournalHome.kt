@@ -1,6 +1,7 @@
-package com.example.app1
+package com.example.app1.ui
 
 import android.os.Bundle
+import com.example.app1.R
 
 class JournalHome : NavigationDrawer() {
     override fun onCreate(savedInstanceState: Bundle?) {
