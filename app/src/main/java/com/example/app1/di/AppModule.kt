@@ -20,6 +20,12 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
+    @Provides
+    @Singleton
+    fun provideContext(@ApplicationContext context: Context): Context {
+        return context
+    }
+
     @Singleton
     @Provides
     fun provideDatabase(@ApplicationContext appContext: Context): JournalDatabase {
@@ -76,10 +82,12 @@ object AppModule {
         return retrofit.create(JournalApiService::class.java)
     }
 
-    @Singleton
-    @Provides
-    fun provideUserRepository(api: JournalApiService, userDao: UserDao): UserRepository {
-        return UserRepository(api, userDao)
+    fun provideUserRepository(
+        api: JournalApiService,
+        userDao: UserDao,
+        @ApplicationContext context: Context
+    ): UserRepository {
+        return UserRepository(api, userDao, context)
     }
 
     @Singleton
