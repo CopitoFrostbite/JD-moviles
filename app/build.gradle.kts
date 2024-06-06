@@ -59,6 +59,13 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:1.7.1")
     implementation("com.google.dagger:dagger:2.51.1")
     implementation("com.google.dagger:hilt-android:2.51.1")
+
+
+    implementation("androidx.drawerlayout:drawerlayout:1.2.0")
+    implementation("androidx.coordinatorlayout:coordinatorlayout:1.2.0")
+
+
+
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
