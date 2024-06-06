@@ -11,6 +11,7 @@ import android.widget.TextView
 //import com.example.app1.NewJournal
 
 import com.example.app1.R
+import com.example.app1.SetReminder
 import com.example.app1.UserProfile
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -25,7 +26,7 @@ class MainActivity : AppCompatActivity() {
         val btnLogin: Button = findViewById(R.id.btnLogin)
 
         btnLogin.setOnClickListener {
-            val intent: Intent = Intent(this, UserProfile::class.java)
+            val intent: Intent = Intent(this, SetReminder::class.java)
             startActivity(intent)
         }
 
