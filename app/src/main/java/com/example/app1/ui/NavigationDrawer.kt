@@ -1,4 +1,4 @@
-package com.example.app1
+package com.example.app1.ui
 
 import android.content.res.Configuration
 import android.os.Bundle
@@ -12,6 +12,7 @@ import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import com.example.app1.R
 import com.google.android.material.navigation.NavigationView
 
 open class NavigationDrawer : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -39,7 +40,10 @@ open class NavigationDrawer : AppCompatActivity(), NavigationView.OnNavigationIt
         setSupportActionBar(toolBar)
 
         drawer = findViewById(R.id.drawer_layout)
-        toggle = ActionBarDrawerToggle(this, drawer, toolBar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
+        toggle = ActionBarDrawerToggle(this, drawer, toolBar,
+            R.string.navigation_drawer_open,
+            R.string.navigation_drawer_close
+        )
 
         drawer.addDrawerListener(toggle)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)

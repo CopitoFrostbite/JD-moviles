@@ -14,6 +14,12 @@ interface JournalApiService {
     @POST("login")
     suspend fun loginUser(@Body credentials: Map<String, String>): Response<User>
 
+    @GET("user/{userId}")
+    suspend fun getUserById(@Path("userId") userId: Int): Response<User>
+
+    @PUT("user/{id}")
+    suspend fun updateUser(@Path("id") id: Int, @Body user: User): Response<User>
+
     // JournalEntry-related endpoints
     @POST("entries")
     suspend fun createEntry(@Body entry: JournalEntry): Response<JournalEntry>
