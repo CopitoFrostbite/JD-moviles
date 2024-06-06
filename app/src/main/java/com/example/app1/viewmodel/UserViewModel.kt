@@ -2,6 +2,8 @@ package com.example.app1.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.liveData
 import androidx.work.*
 import com.example.app1.data.model.User
@@ -17,6 +19,9 @@ class UserViewModel @Inject constructor(
     application: Application
 ) : AndroidViewModel(application) {
 
+    private val _user = MutableLiveData<User>()
+    val user: LiveData<User> get() = _user
+
     fun registerUser(user: User) = liveData(Dispatchers.IO) {
         val response = userRepository.registerUser(user)
         emit(response)
@@ -30,6 +35,10 @@ class UserViewModel @Inject constructor(
     fun getUserById(userId: Int) = liveData(Dispatchers.IO) {
         val user = userRepository.getUserById(userId)
         emit(user)
+    }
+
+    fun setUser(user: User) {
+        _user.value = user
     }
 
     fun scheduleSync() {
