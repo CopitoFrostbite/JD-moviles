@@ -3,15 +3,24 @@ package com.example.app1.data.remote
 import com.example.app1.data.model.*
 import retrofit2.Response
 import retrofit2.http.*
-
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 
 interface JournalApiService {
 
     // User-related endpoints
-    @POST("register")
-    suspend fun registerUser(@Body user: User): Response<User>
+    @Multipart
+    @POST("user/register")
+    suspend fun registerUser(
+        @Part avatar: MultipartBody.Part?,
+        @Part("username") username: RequestBody,
+        @Part("name") name: RequestBody,
+        @Part("lastname") lastname: RequestBody,
+        @Part("email") email: RequestBody,
+        @Part("password") password: RequestBody
+    ): Response<User>
 
-    @POST("login")
+    @POST("user/login")
     suspend fun loginUser(@Body credentials: Map<String, String>): Response<User>
 
     @GET("user/{userId}")

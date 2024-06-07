@@ -70,7 +70,7 @@ object AppModule {
     @Provides
     fun provideRetrofit(): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://your-server-url.com/") // Reemplaza con tu URL del servidor
+            .baseUrl("http://10.0.2.2:3000/api/")
             .addConverterFactory(GsonConverterFactory.create())
             .client(OkHttpClient.Builder().build())
             .build()
