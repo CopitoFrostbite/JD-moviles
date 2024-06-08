@@ -67,6 +67,10 @@ class UserViewModel @Inject constructor(
         _user.value = user
     }
 
+    fun getCurrentUser(): LiveData<User?> {
+        return userRepository.getCurrentUser()
+    }
+
     fun scheduleSync() {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)

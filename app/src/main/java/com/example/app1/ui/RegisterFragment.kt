@@ -13,6 +13,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.commit
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import com.example.app1.R
@@ -88,7 +89,12 @@ class RegisterFragment : Fragment() {
                 ).observe(viewLifecycleOwner) { response: Response<User> ->
                     if (response.isSuccessful) {
                         val user = response.body()
-                        Toast.makeText(requireContext(), "Usuario creado con éxito: ${user?.username}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Usuario creado con éxito", Toast.LENGTH_SHORT).show()
+
+                        parentFragmentManager.commit {
+                            replace(R.id.fragment_container, LoginFragment())
+                            addToBackStack(null)
+                        }
                     } else {
                         val errorBody = response.errorBody()?.string()
                         Log.e("RegisterFragment", "Error de registro: ${response.message()} - $errorBody")

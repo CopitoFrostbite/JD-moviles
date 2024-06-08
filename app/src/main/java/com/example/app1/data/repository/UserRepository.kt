@@ -4,6 +4,8 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.example.app1.data.local.UserDao
 import com.example.app1.data.model.User
 import com.example.app1.data.remote.JournalApiService
@@ -48,16 +50,9 @@ class UserRepository @Inject constructor(
                 }
 
                 val response = api.registerUser(avatarPart, usernamePart, namePart, lastnamePart, emailPart, passwordPart)
-                if (response.isSuccessful) {
-                    response.body()?.let {
-                        userDao.clearUsers()
-                        userDao.insertUser(it)
-                        PreferencesHelper.saveUserId(context, it.userId)
-                    }
-                }
                 response
             } catch (e: Exception) {
-                Log.e("UserRepository", "Error de registro: - ")
+                Log.e("UserRepository", "Error de registro", e)
                 Response.error(500, "Error during registration".toResponseBody("text/plain".toMediaTypeOrNull()))
             }
         } else {
@@ -122,6 +117,17 @@ class UserRepository @Inject constructor(
                 }
             }
         }
+    }
+
+    fun getCurrentUser(): LiveData<User?> {
+        val result = MutableLiveData<User?>()
+        val userId = PreferencesHelper.getUserId(context)
+        if (userId != -1) {
+            result.postValue(userDao.getUserByIdSync(userId))
+        } else {
+            result.postValue(null)
+        }
+        return result
     }
 
     private fun uriToFile(uri: Uri): File {

@@ -1,36 +1,38 @@
 package com.example.app1.ui
 
-import android.os.Bundle
-import android.widget.Button
 import android.content.Intent
-import android.widget.EditText
-import androidx.appcompat.app.AppCompatActivity
-import android.widget.TextView
-import android.widget.Toast
+import android.os.Bundle
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
-//import com.example.app1.JournalHome
-//import com.example.app1.MyJournals
-//import com.example.app1.NewJournal
-
 import com.example.app1.R
-import com.example.app1.SetReminder
-import com.example.app1.UserProfile
-import dagger.hilt.android.AndroidEntryPoint
+import com.example.app1.data.model.User
 import com.example.app1.viewmodel.UserViewModel
+
+import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
+    private val userViewModel: UserViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        if (savedInstanceState == null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, LoginFragment())
-                .commit()
-        }
+        userViewModel.getCurrentUser().observe(this, Observer { user ->
+            if (user != null) {
+                // Usuario encontrado, iniciar sesión automáticamente
+                startActivity(Intent(this, MainActivity::class.java))
+                finish()
+            } else {
+                // No hay usuario, mostrar LoginFragment
+                if (savedInstanceState == null) {
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, LoginFragment())
+                        .commit()
+                }
+            }
+        })
     }
 }
