@@ -6,29 +6,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:openDrawer="start"
-    tools:context=".ui.NavigationDrawerFragment">
+    tools:context=".ui.Home">
 
-    <RelativeLayout
-        android:id="@+id/main"
+    <!-- The main content view -->
+    <FrameLayout
+        android:id="@+id/fragment_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@android:color/transparent">
+        android:layout_height="match_parent" />
 
-        <include
-            layout="@layout/app_bar_main"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-        <!-- Content goes here -->
-
-    </RelativeLayout>
-
+    <!-- The navigation drawer -->
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
-        android:layout_width="wrap_content"
+        android:layout_width="280dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        app:headerLayout="@layout/nav_header_main"
-        app:menu="@menu/activity_main_drawer" />
+
+    app:headerLayout="@layout/nav_header_main"
+    app:menu="@menu/activity_main_drawer" />
 
 </androidx.drawerlayout.widget.DrawerLayout>
