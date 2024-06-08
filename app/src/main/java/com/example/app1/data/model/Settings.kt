@@ -10,7 +10,7 @@ import androidx.room.ForeignKey
 )
 data class Settings(
     @PrimaryKey(autoGenerate = true) val settingsId: Int = 0,
-    val userId: Int,
+    val userId: String,
     val theme: String,
     val notificationsEnabled: Boolean
 )

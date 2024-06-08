@@ -65,7 +65,7 @@ class LoginFragment : Fragment() {
     private fun observeViewModel() {
         userViewModel.user.observe(viewLifecycleOwner, Observer { user ->
             user?.let {
-                // Actualiza la UI con los datos del usuario
+
                 Toast.makeText(requireContext(), "Bienvenido, ${it.username}", Toast.LENGTH_SHORT).show()
             }
         })

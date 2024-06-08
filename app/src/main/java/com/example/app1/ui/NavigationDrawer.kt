@@ -54,7 +54,7 @@ open class NavigationDrawer : AppCompatActivity(), NavigationView.OnNavigationIt
     }
 
     open fun getLayoutResId(): Int {
-        return R.layout.activity_navigation_drawer
+        return R.layout.fragment_navigation_drawer
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {

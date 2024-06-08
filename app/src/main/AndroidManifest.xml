@@ -26,6 +26,9 @@
             android:name=".UserProfile"
             android:exported="false" />
         <activity
+            android:name=".ui.LoadingActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.NewJournal"
             android:exported="false" />
         <activity
