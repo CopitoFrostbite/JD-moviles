@@ -7,7 +7,7 @@
     android:orientation="vertical"
     android:id="@+id/main"
     android:padding="16dp"
-    tools:context=".UserProfile">
+    tools:context=".UserProfileFragment">
 
     <!-- Foto de perfil -->
     <ImageView

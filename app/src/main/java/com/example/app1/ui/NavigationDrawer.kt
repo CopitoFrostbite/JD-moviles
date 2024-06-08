@@ -60,7 +60,7 @@ open class NavigationDrawer : AppCompatActivity(), NavigationView.OnNavigationIt
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.nav_item_one -> Toast.makeText(this, "Item 1", Toast.LENGTH_SHORT).show()
-            R.id.nav_item_two -> Toast.makeText(this, "Item 2", Toast.LENGTH_SHORT).show()
+            R.id.nav_item_two -> Toast.makeText(this, "Item 26", Toast.LENGTH_SHORT).show()
             R.id.nav_item_three -> Toast.makeText(this, "Item 3", Toast.LENGTH_SHORT).show()
         }
 

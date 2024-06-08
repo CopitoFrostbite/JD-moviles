@@ -61,9 +61,9 @@ class NavigationDrawerFragment : Fragment(), NavigationView.OnNavigationItemSele
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.nav_item_one -> Toast.makeText(requireContext(), "Item 1", Toast.LENGTH_SHORT).show()
-            R.id.nav_item_two -> Toast.makeText(requireContext(), "Item 2", Toast.LENGTH_SHORT).show()
-            R.id.nav_item_three -> Toast.makeText(requireContext(), "Item 3", Toast.LENGTH_SHORT).show()
+            R.id.nav_item_one -> Toast.makeText(requireContext(), "My Journals", Toast.LENGTH_SHORT).show()
+            R.id.nav_item_two -> Toast.makeText(requireContext(), "New Journal", Toast.LENGTH_SHORT).show()
+            R.id.nav_item_three -> Toast.makeText(requireContext(), "Profile", Toast.LENGTH_SHORT).show()
         }
 
         drawer.closeDrawer(GravityCompat.START)
