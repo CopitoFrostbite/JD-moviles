@@ -35,10 +35,8 @@ class Home : AppCompatActivity() {
                 // Actualiza el TextView con el nombre del usuario
                 val headerView = navigationView.getHeaderView(0)
 
-
-                // Puedes actualizar otras vistas aquí también
             } else {
-                // Maneja el caso donde el usuario no está logueado
+
             }
         })
 
@@ -55,26 +53,26 @@ class Home : AppCompatActivity() {
     private fun setupDrawerPeek() {
         drawer.addDrawerListener(object : DrawerLayout.DrawerListener {
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
-                // No implementation needed
+
             }
 
             override fun onDrawerOpened(drawerView: View) {
-                // No implementation needed
+
             }
 
             override fun onDrawerClosed(drawerView: View) {
-                // No implementation needed
+
             }
 
             override fun onDrawerStateChanged(newState: Int) {
-                // No implementation needed
+
             }
         })
         drawer.post {
             drawer.openDrawer(GravityCompat.START)
             drawer.postDelayed({
                 drawer.closeDrawer(GravityCompat.START)
-            }, 8000) // Ajusta el retraso según sea necesario
+            }, 8000) //
         }
     }
 

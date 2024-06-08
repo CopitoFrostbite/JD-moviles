@@ -74,8 +74,7 @@ class UserProfileFragment : Fragment() {
                 email.text = Editable.Factory.getInstance().newEditable(user.email)
                 fullName.text =
                     Editable.Factory.getInstance().newEditable("${user.name} ${user.lastname}")
-                // Cargar imagen del perfil si es necesario
-                // Puedes cargar la imagen usando Glide o Picasso si tienes una URL
+
                  Glide.with(this).load(user.profilePicture).into(profileImage)
             }
         }

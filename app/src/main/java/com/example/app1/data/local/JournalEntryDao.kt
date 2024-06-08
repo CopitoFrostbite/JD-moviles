@@ -10,8 +10,26 @@ import com.example.app1.data.model.JournalEntry
 @Dao
 interface JournalEntryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertEntry(entry: JournalEntry)
+    suspend fun insertEntry(journalEntry: JournalEntry)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(journalEntries: List<JournalEntry>)
+
+    @Query("SELECT * FROM journal_entries WHERE entryId = :entryId")
+    suspend fun getEntryById(entryId: Int): JournalEntry?
 
     @Query("SELECT * FROM journal_entries WHERE userId = :userId")
-    fun getEntriesByUserId(userId: Int): LiveData<List<JournalEntry>>
+    suspend fun getAllEntriesByUserId(userId: String): List<JournalEntry>
+
+    @Query("SELECT * FROM journal_entries WHERE userId = :userId")
+    fun getAllEntriesByUserIdSync(userId: String): LiveData<List<JournalEntry>>
+
+    @Update
+    suspend fun updateEntry(journalEntry: JournalEntry)
+
+    @Query("DELETE FROM journal_entries WHERE entryId = :entryId")
+    suspend fun deleteEntry(entryId: Int)
+
+    @Query("DELETE FROM journal_entries WHERE userId = :userId")
+    suspend fun deleteAllEntriesByUserId(userId: String)
 }

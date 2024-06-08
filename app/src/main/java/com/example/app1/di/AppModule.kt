@@ -92,8 +92,12 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideJournalEntryRepository(api: JournalApiService, journalEntryDao: JournalEntryDao): JournalEntryRepository {
-        return JournalEntryRepository(api, journalEntryDao)
+    fun provideJournalEntryRepository(
+        api: JournalApiService,
+        journalEntryDao: JournalEntryDao,
+        @ApplicationContext context: Context
+    ): JournalEntryRepository {
+        return JournalEntryRepository(api, journalEntryDao, context)
     }
 
     @Singleton

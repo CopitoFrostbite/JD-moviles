@@ -44,14 +44,22 @@ interface JournalApiService {
     suspend fun updateUser(@Path("id") id: String, @Body user: User): Response<User>
 
     // JournalEntry-related endpoints
-    @POST("entries")
-    suspend fun createEntry(@Body entry: JournalEntry): Response<JournalEntry>
+    @Multipart
+    @POST("journal/create")
+    suspend fun registerJournalEntry(
 
-    @GET("entries")
-    suspend fun getEntries(): Response<List<JournalEntry>>
+        @Part("userId") userId: RequestBody,
+        @Part("title") title: RequestBody,
+        @Part("content") content: RequestBody,
+        @Part("date") date: RequestBody,
+        @Part("isEdited") isEdited: RequestBody
+    ): Response<JournalEntry>
 
-    @GET("entries/user/{userId}")
-    suspend fun getEntriesByUserId(@Path("userId") userId: Int): Response<List<JournalEntry>>
+    @GET("journal/")
+    suspend fun getJournalEntryById(@Body entryId: Int): Response<JournalEntry>
+
+    @GET("journals")
+    suspend fun getAllJournalEntries(@Body userId: String): Response<List<JournalEntry>>
 
     // Image-related endpoints
     @POST("entries/{entryId}/images")
