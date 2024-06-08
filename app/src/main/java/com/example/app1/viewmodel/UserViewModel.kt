@@ -19,6 +19,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
+import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.Response
 import javax.inject.Inject
 
@@ -53,12 +54,32 @@ class UserViewModel @Inject constructor(
         return result
     }
 
-    fun loginUser(email: String, password: String) = liveData(Dispatchers.IO) {
-        val response = userRepository.loginUser(email, password)
-        emit(response)
+    fun loginUser(email: String, password: String): MutableLiveData<Response<User>?> {
+        val result = MutableLiveData<Response<User>?>()
+        viewModelScope.launch(Dispatchers.IO) {
+            Log.d("UserViewModel", "Login started: email=$email") // Log at start
+            try {
+                val response = userRepository.loginUser(email, password)
+                result.postValue(response)
+                if (response != null) {
+                    if (response.isSuccessful) {
+                        Log.d("UserViewModel", "Login successful: user=${response.body()?.username}")
+                    } else {
+                        Log.e("UserViewModel", "Login failed: ${response.errorBody()?.string()}")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Exception during login", e)
+                val errorResponse = Response.error<User>(500,
+                    "Error logging in".toResponseBody("text/plain".toMediaTypeOrNull())
+                )
+                result.postValue(errorResponse)
+            }
+        }
+        return result
     }
 
-    fun getUserById(userId: Int) = liveData(Dispatchers.IO) {
+    fun getUserById(userId: String) = liveData(Dispatchers.IO) {
         val user = userRepository.getUserById(userId)
         emit(user)
     }

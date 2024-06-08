@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="50dp"
-    tools:context=".NewJournal">
+    tools:context=".ui.NewJournal">
 
     <EditText
         android:id="@+id/etJournalTitle"

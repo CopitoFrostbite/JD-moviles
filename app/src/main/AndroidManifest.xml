@@ -26,7 +26,7 @@
             android:name=".UserProfile"
             android:exported="false" />
         <activity
-            android:name=".NewJournal"
+            android:name=".ui.NewJournal"
             android:exported="false" />
         <activity
             android:name=".Reminders"

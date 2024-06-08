@@ -7,16 +7,16 @@ object PreferencesHelper {
     private const val PREFS_NAME = "user_prefs"
     private const val KEY_USER_ID = "user_id"
 
-    fun saveUserId(context: Context, userId: Int) {
+    fun saveUserId(context: Context, userId: String) {
         val sharedPreferences: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
-        editor.putInt(KEY_USER_ID, userId)
+        editor.putString(KEY_USER_ID, userId)
         editor.apply()
     }
 
-    fun getUserId(context: Context): Int {
+    fun getUserId(context: Context): String? {
         val sharedPreferences: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        return sharedPreferences.getInt(KEY_USER_ID, -1)
+        return sharedPreferences.getString(KEY_USER_ID, "")
     }
 
     fun clearUserId(context: Context) {

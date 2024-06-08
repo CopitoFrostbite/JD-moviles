@@ -1,5 +1,6 @@
 package com.example.app1.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -37,9 +38,14 @@ class LoginFragment : Fragment() {
         val tvRegister: TextView = view.findViewById(R.id.linkText)
 
         btnLogin.setOnClickListener {
-            val email = emailEditText.text.toString()
-            val password = passwordEditText.text.toString()
-            performLogin(email, password)
+            val email = emailEditText.text.toString().trim()
+            val password = passwordEditText.text.toString().trim()
+
+            if (validateInputs(email, password)) {
+                performLogin(email, password)
+            } else {
+                Toast.makeText(requireContext(), "Por favor ingrese un email y contraseña válidos.", Toast.LENGTH_SHORT).show()
+            }
         }
 
         tvRegister.setOnClickListener {
@@ -50,6 +56,10 @@ class LoginFragment : Fragment() {
         }
 
         observeViewModel()
+    }
+
+    private fun validateInputs(email: String, password: String): Boolean {
+        return email.isNotEmpty() && password.isNotEmpty()
     }
 
     private fun observeViewModel() {
@@ -63,17 +73,31 @@ class LoginFragment : Fragment() {
 
     private fun performLogin(email: String, password: String) {
         userViewModel.loginUser(email, password).observe(viewLifecycleOwner, Observer { response ->
-            if (response.isSuccessful) {
+            if (response?.isSuccessful == true) {
                 response.body()?.let { user ->
                     userViewModel.setUser(user)
-                    // Login exitoso
+
                     Toast.makeText(requireContext(), "Login exitoso", Toast.LENGTH_SHORT).show()
-                    // Navegar a otra pantalla, si es necesario
+
+                    startActivity(Intent(requireContext(), NewJournal::class.java))
+                    activity?.finish()
+                } ?: run {
+
+                    val errorMessage = "Error de autenticación: El cuerpo de la respuesta es null"
+                    Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
                 }
             } else {
-                // Manejar el caso de error en el login
-                Toast.makeText(requireContext(), "Error de autenticación: ${response.message()}", Toast.LENGTH_SHORT).show()
+
+                val errorMessage = response?.errorBody()?.string() ?: "Error de autenticación: ${response?.message()}"
+                Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
             }
         })
+    }
+
+    private fun navigateToHomeScreen() {
+        // Navegar a la pantalla de inicio u otra pantalla principal de la aplicación
+        // val intent = Intent(requireContext(), HomeActivity::class.java)
+        // startActivity(intent)
+        // requireActivity().finish()
     }
 }

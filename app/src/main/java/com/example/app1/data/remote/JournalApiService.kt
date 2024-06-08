@@ -20,14 +20,28 @@ interface JournalApiService {
         @Part("password") password: RequestBody
     ): Response<User>
 
+
+    data class LoginResponse(
+        val message: String,
+        val user: UserResponse
+    )
+
+    data class UserResponse(
+        val userId: String,
+        val username: String,
+        val name: String,
+        val lastname: String,
+        val email: String,
+        val profilePicture: String
+    )
     @POST("user/login")
     suspend fun loginUser(@Body credentials: Map<String, String>): Response<User>
 
     @GET("user/{userId}")
-    suspend fun getUserById(@Path("userId") userId: Int): Response<User>
+    suspend fun getUserById(@Path("userId") userId: String): Response<User>
 
     @PUT("user/{id}")
-    suspend fun updateUser(@Path("id") id: Int, @Body user: User): Response<User>
+    suspend fun updateUser(@Path("id") id: String, @Body user: User): Response<User>
 
     // JournalEntry-related endpoints
     @POST("entries")
