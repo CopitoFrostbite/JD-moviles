@@ -114,6 +114,26 @@ class JournalEntryRepository @Inject constructor(
         }
     }
 
+    suspend fun syncEditedEntries() {
+        if (NetworkUtils.isNetworkAvailable(context)) {
+            try {
+                val userId = PreferencesHelper.getUserId(context)
+                userId?.let {
+                    val editedEntries = journalDao.getEditedEntries(it)
+                    for (entry in editedEntries) {
+                        val response = api.updateJournalEntry(entry.entryId, entry.title, entry.content, entry.date, entry.isEdited)
+                        if (response.isSuccessful) {
+                            entry.isEdited = false // Marcar como sincronizado
+                            journalDao.updateEntry(entry)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("JournalRepository", "Error syncing edited journal entries", e)
+            }
+        }
+    }
+
     fun getCurrentJournalEntries(): LiveData<List<JournalEntry>> = liveData(Dispatchers.IO) {
         val userId = PreferencesHelper.getUserId(context)
         val entries: LiveData<List<JournalEntry>> = if (userId?.isNotEmpty() == true) {

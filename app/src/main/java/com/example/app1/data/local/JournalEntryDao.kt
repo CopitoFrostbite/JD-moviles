@@ -24,6 +24,9 @@ interface JournalEntryDao {
     @Query("SELECT * FROM journal_entries WHERE userId = :userId")
     fun getAllEntriesByUserIdSync(userId: String): LiveData<List<JournalEntry>>
 
+    @Query("SELECT * FROM journal_entries WHERE userId = :userId AND isEdited = 1")
+    suspend fun getEditedEntries(userId: String): List<JournalEntry>
+
     @Update
     suspend fun updateEntry(journalEntry: JournalEntry)
 

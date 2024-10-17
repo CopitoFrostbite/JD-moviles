@@ -32,9 +32,6 @@ class JournalEntryViewModel @Inject constructor(
     private val _createJournalEntryLiveData = MutableLiveData<Response<JournalEntry>>()
     val createJournalEntryLiveData: LiveData<Response<JournalEntry>> get() = _createJournalEntryLiveData
 
-    private val _journalEntry = MutableLiveData<JournalEntry>()
-    val journalEntry: LiveData<JournalEntry> get() = _journalEntry
-
     fun createJournalEntry(
         userId: String,
         title: String,
@@ -48,7 +45,7 @@ class JournalEntryViewModel @Inject constructor(
                 _createJournalEntryLiveData.postValue(response)
             } catch (e: Exception) {
                 Log.e("JournalEntryViewModel", "Error creating journal entry", e)
-                val errorResponse = Response.error<JournalEntry>(500, ResponseBody.create("text/plain".toMediaTypeOrNull(), "Error creating journal entry"))
+                val errorResponse = Response.error<JournalEntry>(500, "Error creating journal entry".toResponseBody("text/plain".toMediaTypeOrNull()))
                 _createJournalEntryLiveData.postValue(errorResponse)
             }
         }
@@ -82,11 +79,18 @@ class JournalEntryViewModel @Inject constructor(
     }
 
     fun setJournalEntry(entry: JournalEntry) {
-        _journalEntry.value = entry
+        //_journalEntry.value = entry
     }
 
     fun getCurrentJournalEntries(): LiveData<List<JournalEntry>> {
         return journalRepository.getCurrentJournalEntries()
+    }
+
+    fun getUserJournals(userId: String): LiveData<List<JournalEntry>> {
+        return liveData {
+            val journals = journalRepository.getAllJournalEntries(userId)
+            emit(journals)
+        }
     }
 
     fun scheduleSync() {

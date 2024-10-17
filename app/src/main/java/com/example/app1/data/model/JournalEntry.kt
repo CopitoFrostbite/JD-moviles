@@ -11,8 +11,8 @@ import androidx.room.ForeignKey
 data class JournalEntry(
     @PrimaryKey(autoGenerate = true) val entryId: Int = 0,
     val userId: String,
-    val title: String,
-    val content: String,
+    var title: String,
+    var content: String,
     val date: Long = System.currentTimeMillis(),
-    val isEdited: Boolean = false
+    var isEdited: Boolean = false
 )

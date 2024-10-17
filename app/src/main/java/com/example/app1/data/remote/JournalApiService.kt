@@ -55,6 +55,16 @@ interface JournalApiService {
         @Part("isEdited") isEdited: RequestBody
     ): Response<JournalEntry>
 
+    @FormUrlEncoded
+    @PUT("journal/{entryId}/update")
+    suspend fun updateJournalEntry(
+        @Path("entryId") entryId: Int,
+        @Field("title") title: String,
+        @Field("content") content: String,
+        @Field("date") date: Long,
+        @Field("isEdited") isEdited: Boolean
+    ): Response<JournalEntry>
+
     @GET("journal/")
     suspend fun getJournalEntryById(@Body entryId: Int): Response<JournalEntry>
 

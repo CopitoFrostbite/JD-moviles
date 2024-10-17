@@ -11,7 +11,7 @@ import androidx.room.ForeignKey
 data class Reminder(
     @PrimaryKey(autoGenerate = true) val reminderId: Int = 0,
     val userId: String,
-    val description: String,
-    val date: Long,
+    var description: String,
+    var date: Long,
     val time: String
 )
