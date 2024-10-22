@@ -16,11 +16,11 @@ class SettingsRepository @Inject constructor(
         return api.updateSettings(settings)
     }
 
-    suspend fun getSettingsByUserId(userId: Int): Settings? {
+    suspend fun getSettingsByUserId(userId: String): Settings? {
         return settingsDao.getSettingsByUserId(userId)
     }
 
-    suspend fun getSettingsByUserIdFromApi(userId: Int): Response<Settings> {
+    suspend fun getSettingsByUserIdFromApi(userId: String): Response<Settings> {
         return api.getSettingsByUserId(userId)
     }
 }

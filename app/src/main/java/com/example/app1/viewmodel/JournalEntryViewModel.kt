@@ -73,7 +73,7 @@ class JournalEntryViewModel @Inject constructor(
         return result
     }
 
-    fun getJournalEntryById(entryId: Int) = liveData(Dispatchers.IO) {
+    fun getJournalEntryById(entryId: String) = liveData(Dispatchers.IO) {
         val entry = journalRepository.getJournalEntryById(entryId)
         emit(entry)
     }

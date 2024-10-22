@@ -18,10 +18,10 @@ class ReminderViewModel @Inject constructor(
         emit(response)
     }
 
-    fun getRemindersByUserId(userId: Int) = liveData(Dispatchers.IO) {
+    fun getRemindersByUserId(userId: String) = liveData(Dispatchers.IO) {
         val reminders = reminderRepository.getRemindersByUserIdFromApi(userId)
         emit(reminders)
     }
 
-    fun getLocalRemindersByUserId(userId: Int) = reminderRepository.getRemindersByUserId(userId)
+    fun getLocalRemindersByUserId(userId: String) = reminderRepository.getRemindersByUserId(userId)
 }

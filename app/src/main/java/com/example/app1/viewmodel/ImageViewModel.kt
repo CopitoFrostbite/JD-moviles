@@ -13,15 +13,15 @@ class ImageViewModel @Inject constructor(
     private val imageRepository: ImageRepository
 ) : ViewModel() {
 
-    fun addImageToEntry(entryId: Int, image: Image) = liveData(Dispatchers.IO) {
+    fun addImageToEntry(entryId: String, image: Image) = liveData(Dispatchers.IO) {
         val response = imageRepository.addImageToEntry(entryId, image)
         emit(response)
     }
 
-    fun getImagesByEntryId(entryId: Int) = liveData(Dispatchers.IO) {
+    fun getImagesByEntryId(entryId: String) = liveData(Dispatchers.IO) {
         val images = imageRepository.getImagesByEntryIdFromApi(entryId)
         emit(images)
     }
 
-    fun getLocalImagesByEntryId(entryId: Int) = imageRepository.getImagesByEntryId(entryId)
+    fun getLocalImagesByEntryId(entryId: String) = imageRepository.getImagesByEntryId(entryId)
 }

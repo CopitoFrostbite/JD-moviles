@@ -13,5 +13,5 @@ interface ImageDao {
     suspend fun insertImage(image: Image)
 
     @Query("SELECT * FROM images WHERE entryId = :entryId")
-    fun getImagesByEntryId(entryId: Int): LiveData<List<Image>>
+    fun getImagesByEntryId(entryId: String): LiveData<List<Image>>
 }

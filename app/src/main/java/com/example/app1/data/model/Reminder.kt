@@ -9,7 +9,7 @@ import androidx.room.ForeignKey
     foreignKeys = [ForeignKey(entity = User::class, parentColumns = ["userId"], childColumns = ["userId"], onDelete = ForeignKey.CASCADE)]
 )
 data class Reminder(
-    @PrimaryKey(autoGenerate = true) val reminderId: Int = 0,
+    @PrimaryKey val reminderId: String,
     val userId: String,
     var description: String,
     var date: Long,

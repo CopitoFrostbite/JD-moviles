@@ -58,7 +58,7 @@ interface JournalApiService {
     @FormUrlEncoded
     @PUT("journal/{entryId}/update")
     suspend fun updateJournalEntry(
-        @Path("entryId") entryId: Int,
+        @Path("entryId") entryId: String,
         @Field("title") title: String,
         @Field("content") content: String,
         @Field("date") date: Long,
@@ -66,29 +66,29 @@ interface JournalApiService {
     ): Response<JournalEntry>
 
     @GET("journal/")
-    suspend fun getJournalEntryById(@Body entryId: Int): Response<JournalEntry>
+    suspend fun getJournalEntryById(@Body entryId: String): Response<JournalEntry>
 
     @GET("journals")
     suspend fun getAllJournalEntries(@Body userId: String): Response<List<JournalEntry>>
 
     // Image-related endpoints
     @POST("entries/{entryId}/images")
-    suspend fun addImageToEntry(@Path("entryId") entryId: Int, @Body image: Image): Response<Image>
+    suspend fun addImageToEntry(@Path("entryId") entryId: String, @Body image: Image): Response<Image>
 
     @GET("entries/{entryId}/images")
-    suspend fun getImagesByEntryId(@Path("entryId") entryId: Int): Response<List<Image>>
+    suspend fun getImagesByEntryId(@Path("entryId") entryId: String): Response<List<Image>>
 
     // Reminder-related endpoints
     @POST("reminders")
     suspend fun createReminder(@Body reminder: Reminder): Response<Reminder>
 
     @GET("reminders/user/{userId}")
-    suspend fun getRemindersByUserId(@Path("userId") userId: Int): Response<List<Reminder>>
+    suspend fun getRemindersByUserId(@Path("userId") userId: String): Response<List<Reminder>>
 
     // Settings-related endpoints
     @POST("settings")
     suspend fun updateSettings(@Body settings: Settings): Response<Settings>
 
     @GET("settings/user/{userId}")
-    suspend fun getSettingsByUserId(@Path("userId") userId: Int): Response<Settings>
+    suspend fun getSettingsByUserId(@Path("userId") userId: String): Response<Settings>
 }

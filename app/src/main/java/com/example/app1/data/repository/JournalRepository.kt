@@ -83,7 +83,7 @@ class JournalEntryRepository @Inject constructor(
         }
     }
 
-    suspend fun getJournalEntryById(entryId: Int): JournalEntry? {
+    suspend fun getJournalEntryById(entryId: String): JournalEntry? {
         return try {
             if (NetworkUtils.isNetworkAvailable(context)) {
                 val response = api.getJournalEntryById(entryId)

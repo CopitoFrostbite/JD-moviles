@@ -9,7 +9,7 @@ import androidx.room.ForeignKey
     foreignKeys = [ForeignKey(entity = User::class, parentColumns = ["userId"], childColumns = ["userId"], onDelete = ForeignKey.CASCADE)]
 )
 data class JournalEntry(
-    @PrimaryKey(autoGenerate = true) val entryId: Int = 0,
+    @PrimaryKey val entryId: String,
     val userId: String,
     var title: String,
     var content: String,

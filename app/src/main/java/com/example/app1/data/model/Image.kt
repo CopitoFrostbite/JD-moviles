@@ -9,8 +9,8 @@ import androidx.room.ForeignKey
     foreignKeys = [ForeignKey(entity = JournalEntry::class, parentColumns = ["entryId"], childColumns = ["entryId"], onDelete = ForeignKey.CASCADE)]
 )
 data class Image(
-    @PrimaryKey(autoGenerate = true) val imageId: Int = 0,
-    val entryId: Int,
+    @PrimaryKey val imageId: String,
+    val entryId: String,
     val filePath: String,
     val description: String? = null,
     val dateAdded: Long = System.currentTimeMillis()

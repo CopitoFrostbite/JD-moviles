@@ -12,15 +12,15 @@ class ImageRepository @Inject constructor(
     private val api: JournalApiService,
     private val imageDao: ImageDao
 ) {
-    suspend fun addImageToEntry(entryId: Int, image: Image): Response<Image> {
+    suspend fun addImageToEntry(entryId: String, image: Image): Response<Image> {
         return api.addImageToEntry(entryId, image)
     }
 
-    fun getImagesByEntryId(entryId: Int): LiveData<List<Image>> {
+    fun getImagesByEntryId(entryId: String): LiveData<List<Image>> {
         return imageDao.getImagesByEntryId(entryId)
     }
 
-    suspend fun getImagesByEntryIdFromApi(entryId: Int): Response<List<Image>> {
+    suspend fun getImagesByEntryIdFromApi(entryId: String): Response<List<Image>> {
         return api.getImagesByEntryId(entryId)
     }
 }

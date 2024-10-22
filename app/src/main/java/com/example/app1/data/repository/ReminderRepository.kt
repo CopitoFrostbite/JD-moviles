@@ -16,11 +16,11 @@ class ReminderRepository @Inject constructor(
         return api.createReminder(reminder)
     }
 
-    fun getRemindersByUserId(userId: Int): LiveData<List<Reminder>> {
+    fun getRemindersByUserId(userId: String): LiveData<List<Reminder>> {
         return reminderDao.getRemindersByUserId(userId)
     }
 
-    suspend fun getRemindersByUserIdFromApi(userId: Int): Response<List<Reminder>> {
+    suspend fun getRemindersByUserIdFromApi(userId: String): Response<List<Reminder>> {
         return api.getRemindersByUserId(userId)
     }
 }

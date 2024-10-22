@@ -18,12 +18,12 @@ class SettingsViewModel @Inject constructor(
         emit(response)
     }
 
-    fun getSettingsByUserId(userId: Int) = liveData(Dispatchers.IO) {
+    fun getSettingsByUserId(userId: String) = liveData(Dispatchers.IO) {
         val settings = settingsRepository.getSettingsByUserIdFromApi(userId)
         emit(settings)
     }
 
-    fun getLocalSettingsByUserId(userId: Int) = liveData(Dispatchers.IO) {
+    fun getLocalSettingsByUserId(userId: String) = liveData(Dispatchers.IO) {
         val settings = settingsRepository.getSettingsByUserId(userId)
         emit(settings)
     }
