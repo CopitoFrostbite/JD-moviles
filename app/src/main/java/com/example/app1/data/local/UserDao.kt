@@ -16,10 +16,10 @@ interface UserDao {
     suspend fun authenticate(email: String, password: String): User?
 
     @Query("SELECT * FROM users WHERE userId = :userId")
-    suspend fun getUserById(userId: String): User?
+    suspend fun getUserById(userId: Int): User?
 
     @Query("SELECT * FROM users WHERE userId = :userId")
-    fun getUserByIdSync(userId: String): User?
+    fun getUserByIdSync(userId: Int): User?
 
     @Query("DELETE FROM users")
     suspend fun clearUsers()
