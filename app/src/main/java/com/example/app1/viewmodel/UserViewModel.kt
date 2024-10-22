@@ -79,7 +79,7 @@ class UserViewModel @Inject constructor(
         return result
     }
 
-    fun getUserById(userId: Int) = liveData(Dispatchers.IO) {
+    fun getUserById(userId: String) = liveData(Dispatchers.IO) {
         val user = userRepository.getUserById(userId)
         emit(user)
     }

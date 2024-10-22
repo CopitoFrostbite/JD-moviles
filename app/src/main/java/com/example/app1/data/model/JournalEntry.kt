@@ -10,7 +10,7 @@ import androidx.room.ForeignKey
 )
 data class JournalEntry(
     @PrimaryKey(autoGenerate = true) val entryId: Int = 0,
-    val userId: Int,
+    val userId: String,
     var title: String,
     var content: String,
     val date: Long = System.currentTimeMillis(),

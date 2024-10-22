@@ -30,7 +30,6 @@ class UserRepository @Inject constructor(
     private val context: Context
 ) {
     suspend fun registerUser(
-
         username: String,
         name: String,
         lastname: String,
@@ -40,11 +39,11 @@ class UserRepository @Inject constructor(
     ): Response<User> {
         return if (NetworkUtils.isNetworkAvailable(context)) {
             try {
-                val usernamePart = username.toRequestBody("text/plain".toMediaTypeOrNull())
-                val namePart = name.toRequestBody("text/plain".toMediaTypeOrNull())
-                val lastnamePart = lastname.toRequestBody("text/plain".toMediaTypeOrNull())
-                val emailPart = email.toRequestBody("text/plain".toMediaTypeOrNull())
-                val passwordPart = password.toRequestBody("text/plain".toMediaTypeOrNull())
+                val usernamePart = RequestBody.create("text/plain".toMediaTypeOrNull(), username)
+                val namePart = RequestBody.create("text/plain".toMediaTypeOrNull(), name)
+                val lastnamePart = RequestBody.create("text/plain".toMediaTypeOrNull(), lastname)
+                val emailPart = RequestBody.create("text/plain".toMediaTypeOrNull(), email)
+                val passwordPart = RequestBody.create("text/plain".toMediaTypeOrNull(), password)
 
                 val avatarPart = avatarUri?.let {
                     val file = uriToFile(it)
@@ -65,9 +64,8 @@ class UserRepository @Inject constructor(
 
     suspend fun loginUser(email: String, password: String): Response<User> {
         Log.d("UserRepository", "Attempting login for email: $email")
-
-        if (NetworkUtils.isNetworkAvailable(context)) {
-            return try {
+        return if (NetworkUtils.isNetworkAvailable(context)) {
+            try {
                 val response = api.loginUser(mapOf("email" to email, "password" to password))
                 Log.d("UserRepository", "API response received: $response")
 
@@ -80,7 +78,7 @@ class UserRepository @Inject constructor(
 
                         // Construir el objeto User con los datos relevantes de la respuesta
                         val user = User(
-                            userId = userResponse.userId,
+                            userId = userResponse.userId, // Asegúrate de manejar el ID adecuadamente
                             username = userResponse.username,
                             name = userResponse.name,
                             lastname = userResponse.lastname,
@@ -93,18 +91,18 @@ class UserRepository @Inject constructor(
                         userDao.insertUser(user)
                         PreferencesHelper.saveUserId(context, user.userId) // Save logged in user's ID
 
-                        Response.success(user)
+                        return Response.success(user)
                     } else {
                         Log.e("UserRepository", "Login failed: Response body is null")
-                        Response.error(500, "Login failed: Response body is null".toResponseBody("text/plain".toMediaTypeOrNull()))
+                        return Response.error(500, "Login failed: Response body is null".toResponseBody("text/plain".toMediaTypeOrNull()))
                     }
                 } else {
                     Log.e("UserRepository", "Login failed: ${response.errorBody()?.string()}")
-                    response
+                    return response
                 }
             } catch (e: Exception) {
                 Log.e("UserRepository", "Exception during login request", e)
-                Response.error(500, "Error during login".toResponseBody("text/plain".toMediaTypeOrNull()))
+                return Response.error(500, "Error during login".toResponseBody("text/plain".toMediaTypeOrNull()))
             }
         } else {
             Log.w("UserRepository", "No network available, attempting local authentication")
@@ -120,8 +118,7 @@ class UserRepository @Inject constructor(
         }
     }
 
-
-    suspend fun getUserById(userId: Int): User? {
+    suspend fun getUserById(userId: String): User? {
         return try {
             if (NetworkUtils.isNetworkAvailable(context)) {
                 val response = api.getUserById(userId)
@@ -143,9 +140,9 @@ class UserRepository @Inject constructor(
 
     suspend fun syncData() {
         if (NetworkUtils.isNetworkAvailable(context)) {
-            val userId = PreferencesHelper.getUserId(context)?.toIntOrNull()
-            if (userId != null) {
-                val localUser = userDao.getUserById(userId)
+            val userId = PreferencesHelper.getUserId(context)
+            if (userId != "") {
+                val localUser = userId?.let { userDao.getUserById(it) }
                 localUser?.let {
                     // Sync the local user with the server
                     api.updateUser(it.userId, it)
@@ -155,8 +152,8 @@ class UserRepository @Inject constructor(
     }
 
     fun getCurrentUser(): LiveData<User?> = liveData(Dispatchers.IO) {
-        val userId = PreferencesHelper.getUserId(context)?.toIntOrNull()
-        val user = if (userId != null) {
+        val userId = PreferencesHelper.getUserId(context)
+        val user = if (userId?.isNotEmpty() == true) {
             userDao.getUserByIdSync(userId)
         } else {
             null
