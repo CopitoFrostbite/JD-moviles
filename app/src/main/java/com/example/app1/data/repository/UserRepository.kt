@@ -29,30 +29,28 @@ class UserRepository @Inject constructor(
     private val userDao: UserDao,
     private val context: Context
 ) {
+
+
     suspend fun registerUser(
-        username: String,
-        name: String,
-        lastname: String,
-        email: String,
-        password: String,
-        avatarUri: Uri?
+        username: RequestBody,
+        name: RequestBody,
+        lastname: RequestBody,
+        email: RequestBody,
+        password: RequestBody,
+        avatar: MultipartBody.Part?
     ): Response<User> {
         return if (NetworkUtils.isNetworkAvailable(context)) {
             try {
-                val usernamePart = RequestBody.create("text/plain".toMediaTypeOrNull(), username)
-                val namePart = RequestBody.create("text/plain".toMediaTypeOrNull(), name)
-                val lastnamePart = RequestBody.create("text/plain".toMediaTypeOrNull(), lastname)
-                val emailPart = RequestBody.create("text/plain".toMediaTypeOrNull(), email)
-                val passwordPart = RequestBody.create("text/plain".toMediaTypeOrNull(), password)
 
-                val avatarPart = avatarUri?.let {
-                    val file = uriToFile(it)
-                    val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
-                    MultipartBody.Part.createFormData("avatar", file.name, requestFile)
+
+                if (avatar != null) {
+                    Log.d("UserRepository", "Enviando avatar con nombre: ${avatar.body.contentType()}")
+                } else {
+                    Log.d("UserRepository", "No se está enviando avatar")
                 }
 
-                val response = api.registerUser(avatarPart, usernamePart, namePart, lastnamePart, emailPart, passwordPart)
-                response
+                // Realiza la llamada a la API
+                api.registerUser(avatar, username, name, lastname, email, password)
             } catch (e: Exception) {
                 Log.e("UserRepository", "Error de registro", e)
                 Response.error(500, "Error during registration".toResponseBody("text/plain".toMediaTypeOrNull()))
@@ -64,8 +62,9 @@ class UserRepository @Inject constructor(
 
     suspend fun loginUser(email: String, password: String): Response<User> {
         Log.d("UserRepository", "Attempting login for email: $email")
-        return if (NetworkUtils.isNetworkAvailable(context)) {
-            try {
+
+        if (NetworkUtils.isNetworkAvailable(context)) {
+            return try {
                 val response = api.loginUser(mapOf("email" to email, "password" to password))
                 Log.d("UserRepository", "API response received: $response")
 
@@ -78,7 +77,7 @@ class UserRepository @Inject constructor(
 
                         // Construir el objeto User con los datos relevantes de la respuesta
                         val user = User(
-                            userId = userResponse.userId, // Asegúrate de manejar el ID adecuadamente
+                            userId = userResponse.userId,
                             username = userResponse.username,
                             name = userResponse.name,
                             lastname = userResponse.lastname,
@@ -91,18 +90,18 @@ class UserRepository @Inject constructor(
                         userDao.insertUser(user)
                         PreferencesHelper.saveUserId(context, user.userId) // Save logged in user's ID
 
-                        return Response.success(user)
+                        Response.success(user)
                     } else {
                         Log.e("UserRepository", "Login failed: Response body is null")
-                        return Response.error(500, "Login failed: Response body is null".toResponseBody("text/plain".toMediaTypeOrNull()))
+                        Response.error(500, "Login failed: Response body is null".toResponseBody("text/plain".toMediaTypeOrNull()))
                     }
                 } else {
                     Log.e("UserRepository", "Login failed: ${response.errorBody()?.string()}")
-                    return response
+                    response
                 }
             } catch (e: Exception) {
                 Log.e("UserRepository", "Exception during login request", e)
-                return Response.error(500, "Error during login".toResponseBody("text/plain".toMediaTypeOrNull()))
+                Response.error(500, "Error during login".toResponseBody("text/plain".toMediaTypeOrNull()))
             }
         } else {
             Log.w("UserRepository", "No network available, attempting local authentication")
@@ -117,6 +116,7 @@ class UserRepository @Inject constructor(
             }
         }
     }
+
 
     suspend fun getUserById(userId: String): User? {
         return try {

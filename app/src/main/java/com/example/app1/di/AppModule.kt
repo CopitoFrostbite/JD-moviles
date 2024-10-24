@@ -12,8 +12,10 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
@@ -69,8 +71,17 @@ object AppModule {
     @Singleton
     @Provides
     fun provideRetrofit(): Retrofit {
+        val logging = HttpLoggingInterceptor()
+        logging.level = HttpLoggingInterceptor.Level.BODY
+        val client = OkHttpClient.Builder()
+            .connectTimeout(60, TimeUnit.SECONDS)  // Tiempo de espera para conectar
+            .writeTimeout(60, TimeUnit.SECONDS)    // Tiempo de espera para escribir datos
+            .readTimeout(60, TimeUnit.SECONDS)
+            .addInterceptor(logging)
+            .build()
         return Retrofit.Builder()
             .baseUrl("https://apimoviles-yha6.onrender.com/api/")
+            .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .client(OkHttpClient.Builder().build())
             .build()

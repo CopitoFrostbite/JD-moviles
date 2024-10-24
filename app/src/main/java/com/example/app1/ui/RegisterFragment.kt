@@ -24,10 +24,12 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Response
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
+
 
 @AndroidEntryPoint
 class RegisterFragment : Fragment() {
@@ -35,12 +37,13 @@ class RegisterFragment : Fragment() {
     private val userViewModel: UserViewModel by viewModels()
     private var selectedImageUri: Uri? = null
 
+    // Para seleccionar la imagen desde el dispositivo
     private val photoPickerLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
             selectedImageUri = uri
-            Toast.makeText(requireContext(), "Imagen seleccionada: $uri", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Imagen seleccionada", Toast.LENGTH_SHORT).show()
         } else {
             Toast.makeText(requireContext(), "Selección de imagen cancelada", Toast.LENGTH_SHORT).show()
         }
@@ -78,29 +81,65 @@ class RegisterFragment : Fragment() {
             val name = nombreEditText.text.toString()
             val lastname = apellidosEditText.text.toString()
 
+            // Validamos los campos antes de continuar
             if (validateInputs(email, password, repeatPassword, username, name, lastname)) {
-                userViewModel.createUser(
-                    username = username,
-                    name = name,
-                    lastname = lastname,
-                    email = email,
-                    password = password,
-                    avatarUri = selectedImageUri
-                ).observe(viewLifecycleOwner) { response: Response<User> ->
-                    if (response.isSuccessful) {
-                        val user = response.body()
-                        Toast.makeText(requireContext(), "Usuario creado con éxito", Toast.LENGTH_SHORT).show()
-
-                        parentFragmentManager.commit {
-                            replace(R.id.fragment_container, LoginFragment())
-                            addToBackStack(null)
+                if (selectedImageUri != null) {
+                    try {
+                        // Crear un archivo temporal a partir de la Uri
+                        val inputStream = requireContext().contentResolver.openInputStream(selectedImageUri!!)
+                        val file = File.createTempFile("temp_image", ".jpg", requireContext().cacheDir)
+                        val outputStream = FileOutputStream(file)
+                        inputStream.use { input ->
+                            outputStream.use { output ->
+                                input?.copyTo(output)
+                            }
                         }
-                    } else {
-                        val errorBody = response.errorBody()?.string()
-                        Log.e("RegisterFragment", "Error de registro: ${response.message()} - $errorBody")
-                        Log.e("RegisterFragment", "Código de estado: ${response.code()}")
-                        Toast.makeText(requireContext(), "Error de registro: ${response.message()} - $errorBody", Toast.LENGTH_SHORT).show()
+
+                        // Crear el RequestBody y MultipartBody.Part para la imagen
+                        val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                        val avatarBody = MultipartBody.Part.createFormData("avatar", file.name, requestFile)
+
+                        // Crear los RequestBody para los otros campos
+                        val usernamePart = username.toRequestBody("text/plain".toMediaTypeOrNull())
+                        val namePart = name.toRequestBody("text/plain".toMediaTypeOrNull())
+                        val lastnamePart = lastname.toRequestBody("text/plain".toMediaTypeOrNull())
+                        val emailPart = email.toRequestBody("text/plain".toMediaTypeOrNull())
+                        val passwordPart = password.toRequestBody("text/plain".toMediaTypeOrNull())
+
+                        // Llamamos a la API para crear el usuario
+                        userViewModel.createUser(
+                            usernamePart,
+                            namePart,
+                            lastnamePart,
+                            emailPart,
+                            passwordPart,
+                            avatarBody
+                        ).observe(viewLifecycleOwner) { response ->
+                            if (response.isSuccessful) {
+                                Toast.makeText(requireContext(), "Usuario creado con éxito", Toast.LENGTH_SHORT).show()
+                                parentFragmentManager.commit {
+                                    replace(R.id.fragment_container, LoginFragment())
+                                    addToBackStack(null)
+                                }
+                            } else {
+                                val errorBody = response.errorBody()?.string()
+                                Log.e("RegisterFragment", "Error de registro: ${response.message()} - ${response.code()} - $errorBody")
+                                Toast.makeText(requireContext(), "Error de registro: ${response.message()} - $errorBody", Toast.LENGTH_SHORT).show()
+                                Log.e("RegisterFragment", "Response raw: ${response.raw()}")
+                                Log.d("RegisterFragment", "Username: $username")
+                                Log.d("RegisterFragment", "Name: $name")
+                                Log.d("RegisterFragment", "Lastname: $lastname")
+                                Log.d("RegisterFragment", "Email: $email")
+                                Log.d("RegisterFragment", "Password: $password")
+                                Log.d("RegisterFragment", "Avatar: ${avatarBody.body.contentType()}")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("RegisterFragment", "Error al procesar la imagen", e)
+                        Toast.makeText(requireContext(), "Error al procesar la imagen", Toast.LENGTH_SHORT).show()
                     }
+                } else {
+                    Toast.makeText(requireContext(), "Selecciona una imagen para el perfil", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -122,3 +161,4 @@ class RegisterFragment : Fragment() {
         return true
     }
 }
+

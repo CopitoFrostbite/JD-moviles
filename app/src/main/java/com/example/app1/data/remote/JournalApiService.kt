@@ -12,7 +12,7 @@ interface JournalApiService {
     @Multipart
     @POST("user/register")
     suspend fun registerUser(
-        @Part avatar: MultipartBody.Part?,
+        @Part image: MultipartBody.Part?,
         @Part("username") username: RequestBody,
         @Part("name") name: RequestBody,
         @Part("lastname") lastname: RequestBody,

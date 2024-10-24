@@ -18,9 +18,13 @@ import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.Response
+import java.io.File
+import java.io.FileOutputStream
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,25 +37,36 @@ class UserViewModel @Inject constructor(
     val user: LiveData<User> get() = _user
 
     fun createUser(
-        username: String,
-        name: String,
-        lastname: String,
-        email: String,
-        password: String,
-        avatarUri: Uri?
+        username: RequestBody,
+        name: RequestBody,
+        lastname: RequestBody,
+        email: RequestBody,
+        password: RequestBody,
+        avatarPart: MultipartBody.Part?  // Directamente un MultipartBody.Part
     ): LiveData<Response<User>> {
         val result = MutableLiveData<Response<User>>()
+
+
+
+        // Llamar al método suspendido en el repositorio desde una corrutina
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val response = userRepository.registerUser(username, name, lastname, email, password, avatarUri)
-                result.postValue(response)
-            } catch (e: Exception) {
-                Log.e("UserViewModel", "Error viewmodel user", e)
-                val errorResponse = Response.error<User>(500, ResponseBody.create("text/plain".toMediaTypeOrNull(), "Error registering user"))
-                result.postValue(errorResponse)
+            val response = userRepository.registerUser(username, name, lastname, email, password, avatarPart)
+            result.postValue(response)
+        }
+
+        return result
+    }
+
+    private fun uriToFile(uri: Uri): File {
+        val contentResolver = getApplication<Application>().contentResolver
+        val fileName = uri.lastPathSegment ?: "temp_image"
+        val tempFile = File(getApplication<Application>().cacheDir, fileName)
+        contentResolver.openInputStream(uri)?.use { inputStream ->
+            FileOutputStream(tempFile).use { outputStream ->
+                inputStream.copyTo(outputStream)
             }
         }
-        return result
+        return tempFile
     }
 
     fun loginUser(email: String, password: String): MutableLiveData<Response<User>?> {
@@ -61,12 +76,10 @@ class UserViewModel @Inject constructor(
             try {
                 val response = userRepository.loginUser(email, password)
                 result.postValue(response)
-                if (response != null) {
-                    if (response.isSuccessful) {
-                        Log.d("UserViewModel", "Login successful: user=${response.body()?.username}")
-                    } else {
-                        Log.e("UserViewModel", "Login failed: ${response.errorBody()?.string()}")
-                    }
+                if (response.isSuccessful) {
+                    Log.d("UserViewModel", "Login successful: user=${response.body()?.username}")
+                } else {
+                    Log.e("UserViewModel", "Login failed: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
                 Log.e("UserViewModel", "Exception during login", e)
