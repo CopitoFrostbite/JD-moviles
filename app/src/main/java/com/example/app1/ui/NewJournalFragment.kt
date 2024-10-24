@@ -46,7 +46,7 @@ class NewJournalFragment : Fragment() {
         }
 
         val spinnerEmotion = view.findViewById<Spinner>(R.id.spinnerEmotion)
-        val emotions = arrayOf("Triste", "Enojado", "Sin ánimos", "Neutral", "Feliz")
+        val emotions = arrayOf("Triste", "Ira", "Sorpresa", "Miedo", "Feliz", "Inconforme")
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, emotions)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerEmotion.adapter = adapter

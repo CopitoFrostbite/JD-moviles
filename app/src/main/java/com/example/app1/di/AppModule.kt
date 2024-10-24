@@ -83,7 +83,6 @@ object AppModule {
             .baseUrl("https://apimoviles-yha6.onrender.com/api/")
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
-            .client(OkHttpClient.Builder().build())
             .build()
     }
 
