@@ -8,18 +8,6 @@ import okhttp3.RequestBody
 
 interface JournalApiService {
 
-    // User-related endpoints
-    @Multipart
-    @POST("user/register")
-    suspend fun registerUser(
-        @Part image: MultipartBody.Part?,
-        @Part("username") username: RequestBody,
-        @Part("name") name: RequestBody,
-        @Part("lastname") lastname: RequestBody,
-        @Part("email") email: RequestBody,
-        @Part("password") password: RequestBody
-    ): Response<User>
-
 
     data class LoginResponse(
         val message: String,
@@ -34,6 +22,28 @@ interface JournalApiService {
         val email: String,
         val profilePicture: String
     )
+
+    data class JournalRequest(
+        val journalId: String,
+        val userId: String,
+        val title: String,
+        val content: String,
+        val mood: Int,
+        val date: Long,
+        val isEdited: Boolean
+    )
+
+    // User-related endpoints
+    @Multipart
+    @POST("user/register")
+    suspend fun registerUser(
+        @Part image: MultipartBody.Part?,
+        @Part("username") username: RequestBody,
+        @Part("name") name: RequestBody,
+        @Part("lastname") lastname: RequestBody,
+        @Part("email") email: RequestBody,
+        @Part("password") password: RequestBody
+    ): Response<User>
     @POST("user/login")
     suspend fun loginUser(@Body credentials: Map<String, String>): Response<User>
 
@@ -44,15 +54,10 @@ interface JournalApiService {
     suspend fun updateUser(@Path("id") id: String, @Body user: User): Response<User>
 
     // JournalEntry-related endpoints
-    @Multipart
+
     @POST("journal/create")
     suspend fun registerJournalEntry(
-
-        @Part("userId") userId: RequestBody,
-        @Part("title") title: RequestBody,
-        @Part("content") content: RequestBody,
-        @Part("date") date: RequestBody,
-        @Part("isEdited") isEdited: RequestBody
+        @Body journalRequest: JournalRequest
     ): Response<JournalEntry>
 
     @FormUrlEncoded

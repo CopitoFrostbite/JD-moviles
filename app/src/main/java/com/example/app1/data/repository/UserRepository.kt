@@ -29,8 +29,6 @@ class UserRepository @Inject constructor(
     private val userDao: UserDao,
     private val context: Context
 ) {
-
-
     suspend fun registerUser(
         username: RequestBody,
         name: RequestBody,

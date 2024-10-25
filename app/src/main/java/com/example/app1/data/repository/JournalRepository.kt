@@ -11,14 +11,12 @@ import androidx.lifecycle.liveData
 import com.example.app1.data.local.JournalEntryDao
 
 import com.example.app1.data.model.JournalEntry
+import com.example.app1.data.model.extensions.toRequest
 import com.example.app1.data.remote.JournalApiService
 import com.example.app1.utils.NetworkUtils
 import com.example.app1.utils.PreferencesHelper
 import kotlinx.coroutines.Dispatchers
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
 
 import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.Response
@@ -31,37 +29,57 @@ class JournalEntryRepository @Inject constructor(
     private val journalDao: JournalEntryDao,
     private val context: Context
 ) {
-    suspend fun registerJournalEntry(
-        userId: String,
-        title: String,
-        content: String,
-        date: Long,
-        isEdited: Boolean
-    ): Response<JournalEntry> {
+    suspend fun registerJournalEntry(journalRequest: JournalApiService.JournalRequest): Response<JournalEntry> {
+        // Buscar la entrada de diario localmente usando el journalId del JournalRequest
+        val journalEntry = journalDao.getEntryById(journalRequest.journalId)
+
+        // Verifica si la entrada es un borrador
+        if (journalEntry?.isDraft == true) {
+            Log.d("JournalRepository", "Entry is a draft and won't be sent to the API")
+            return Response.success(journalEntry)  // Retornamos la entrada localmente
+        }
+
+        // Verificación de red y envío solo si no es borrador
         return if (NetworkUtils.isNetworkAvailable(context)) {
             try {
-                val userIdPart = userId.toRequestBody("text/plain".toMediaTypeOrNull())
-                val titlePart = title.toRequestBody("text/plain".toMediaTypeOrNull())
-                val contentPart = content.toRequestBody("text/plain".toMediaTypeOrNull())
-                val datePart = date.toString().toRequestBody("text/plain".toMediaTypeOrNull())
-                val isEditedPart = isEdited.toString().toRequestBody("text/plain".toMediaTypeOrNull())
-
-
-
-                val response = api.registerJournalEntry( userIdPart, titlePart, contentPart, datePart, isEditedPart)
+                val response = api.registerJournalEntry(journalRequest)  // Usamos journalRequest directamente
                 if (response.isSuccessful) {
-                    response.body()?.let {
-                        journalDao.insertEntry(it)
-                    }
+                    // Actualiza la base de datos local para indicar que ya no es borrador
+                    journalEntry?.isDraft = false
+                    journalEntry?.let { journalDao.updateEntry(it) }  // Actualiza en la BD local
                 }
                 response
             } catch (e: Exception) {
-                Log.e("JournalRepository", "Error registering journal entry", e)
-                Response.error(500, "Error during journal entry registration".toResponseBody("text/plain".toMediaTypeOrNull()))
+                Log.e("JournalRepository", "Error registering journal", e)
+                Response.error(
+                    500,
+                    "Error during journal entry registration".toResponseBody("text/plain".toMediaTypeOrNull())
+                )
             }
         } else {
-            Response.error(503, "No network available".toResponseBody("text/plain".toMediaTypeOrNull()))
+            Log.e("JournalRepository", "No network available for journal entry registration")
+            Response.error(
+                503,
+                "No network available".toResponseBody("text/plain".toMediaTypeOrNull())
+            )
         }
+    }
+
+    suspend fun saveDraft(journalEntry: JournalEntry): Boolean {
+        return try {
+            journalDao.insertEntry(journalEntry)
+
+            // Verificar si el guardado funcionó recuperando el entry
+            val savedEntry = journalDao.getEntryById(journalEntry.journalId)
+            savedEntry != null  // Retorna 'true' si el draft fue guardado
+        } catch (e: Exception) {
+            Log.e("JournalRepository", "Error saving draft", e)
+            false  // Retorna 'false' si hubo un error
+        }
+    }
+
+    suspend fun getJournalDraftById(journalId: String): JournalEntry? {
+        return journalDao.getJournalById(journalId)
     }
 
     suspend fun getAllJournalEntries(userId: String): List<JournalEntry> {

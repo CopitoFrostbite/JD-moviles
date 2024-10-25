@@ -37,14 +37,12 @@ class MyJournalsFragment : Fragment() {
         journalAdapter = JournalAdapter(listOf())  // Iniciar con una lista vacía
         recyclerView.adapter = journalAdapter
 
-        // Obtener el userId del usuario actual
-        val userId = PreferencesHelper.getUserId(requireContext())
+        // Obtener el userId del usuario logueado desde PreferencesHelper
+        val userId = PreferencesHelper.getUserId(requireContext()) ?: return view
 
         // Observar los journals y actualizar la UI
-        userId?.let {
-            journalViewModel.getUserJournals(it).observe(viewLifecycleOwner) { journals ->
-                journalAdapter.updateJournals(journals)
-            }
+        journalViewModel.getUserJournals(userId).observe(viewLifecycleOwner) { journals ->
+            journalAdapter.updateJournals(journals)
         }
 
         return view

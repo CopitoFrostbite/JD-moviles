@@ -9,6 +9,7 @@ import com.example.app1.data.model.JournalEntry
 
 @Dao
 interface JournalEntryDao {
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEntry(journalEntry: JournalEntry)
 
@@ -30,9 +31,31 @@ interface JournalEntryDao {
     @Update
     suspend fun updateEntry(journalEntry: JournalEntry)
 
+    @Query("SELECT * FROM journal_entries WHERE journalId = :journalId AND isDraft = 1 LIMIT 1")
+    suspend fun getJournalById(journalId: String): JournalEntry?
+
     @Query("DELETE FROM journal_entries WHERE journalId = :journalId")
     suspend fun deleteEntry(journalId: String)
 
     @Query("DELETE FROM journal_entries WHERE userId = :userId")
     suspend fun deleteAllEntriesByUserId(userId: String)
+
+    // Nuevos métodos
+    @Query("SELECT * FROM journal_entries WHERE userId = :userId AND isDraft = 1")
+    suspend fun getDraftEntriesByUserId(userId: String): List<JournalEntry>
+
+    @Query("SELECT * FROM journal_entries WHERE userId = :userId AND isDraft = 0")
+    suspend fun getPublishedEntriesByUserId(userId: String): List<JournalEntry>
+
+    @Query("UPDATE journal_entries SET isDraft = 0 WHERE journalId = :journalId")
+    suspend fun markAsPublished(journalId: String)
+
+    @Query("SELECT * FROM journal_entries WHERE isDraft = 0 AND isEdited = 1")
+    suspend fun getEntriesNeedingSync(): List<JournalEntry>
+
+    // Nuevo método para actualizar solo el estado de borrador
+    @Query("UPDATE journal_entries SET isDraft = :isDraft WHERE journalId = :journalId")
+    suspend fun updateDraftStatus(journalId: String, isDraft: Boolean)
+
+
 }
