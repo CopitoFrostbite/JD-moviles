@@ -12,6 +12,6 @@ interface ImageDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertImage(image: Image)
 
-    @Query("SELECT * FROM images WHERE entryId = :entryId")
-    fun getImagesByEntryId(entryId: String): LiveData<List<Image>>
+    @Query("SELECT * FROM images WHERE journalId = :journalId")
+    fun getImagesByEntryId(journalId: String): LiveData<List<Image>>
 }

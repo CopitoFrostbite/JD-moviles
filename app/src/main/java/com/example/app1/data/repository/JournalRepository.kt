@@ -121,7 +121,7 @@ class JournalEntryRepository @Inject constructor(
                 userId?.let {
                     val editedEntries = journalDao.getEditedEntries(it)
                     for (entry in editedEntries) {
-                        val response = api.updateJournalEntry(entry.entryId, entry.title, entry.content, entry.date, entry.isEdited)
+                        val response = api.updateJournalEntry(entry.journalId, entry.title, entry.content, entry.date, entry.isEdited)
                         if (response.isSuccessful) {
                             entry.isEdited = false // Marcar como sincronizado
                             journalDao.updateEntry(entry)

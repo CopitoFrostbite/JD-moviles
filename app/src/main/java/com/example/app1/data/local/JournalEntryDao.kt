@@ -15,8 +15,8 @@ interface JournalEntryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(journalEntries: List<JournalEntry>)
 
-    @Query("SELECT * FROM journal_entries WHERE entryId = :entryId")
-    suspend fun getEntryById(entryId: String): JournalEntry?
+    @Query("SELECT * FROM journal_entries WHERE journalId = :journalId")
+    suspend fun getEntryById(journalId: String): JournalEntry?
 
     @Query("SELECT * FROM journal_entries WHERE userId = :userId")
     suspend fun getAllEntriesByUserId(userId: String): List<JournalEntry>
@@ -30,8 +30,8 @@ interface JournalEntryDao {
     @Update
     suspend fun updateEntry(journalEntry: JournalEntry)
 
-    @Query("DELETE FROM journal_entries WHERE entryId = :entryId")
-    suspend fun deleteEntry(entryId: String)
+    @Query("DELETE FROM journal_entries WHERE journalId = :journalId")
+    suspend fun deleteEntry(journalId: String)
 
     @Query("DELETE FROM journal_entries WHERE userId = :userId")
     suspend fun deleteAllEntriesByUserId(userId: String)
