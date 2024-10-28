@@ -6,9 +6,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="50dp"
-    tools:context=".ui.NewJournal">
+    android:padding="16dp"
+    tools:context=".ui.NewJournalFragment">
 
+    <!-- Título del Diario -->
     <EditText
         android:id="@+id/etJournalTitle"
         android:layout_width="match_parent"
@@ -18,6 +19,8 @@
         android:textColor="@color/mySecondary"
         android:background="?attr/selectableItemBackground"
         android:layout_marginBottom="16dp"/>
+
+    <!-- Contenido del Diario -->
     <EditText
         android:id="@+id/etJournalContent"
         android:layout_width="match_parent"
@@ -29,11 +32,33 @@
         android:background="?attr/selectableItemBackground"
         android:gravity="top"
         android:layout_marginBottom="16dp"/>
+
+    <!-- Selección de Estado de Ánimo -->
     <Spinner
         android:id="@+id/spinnerEmotion"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"/>
+
+    <!-- Botón para Agregar Imágenes -->
+    <Button
+        android:id="@+id/btnAddImage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Agregar Imagen"
+        android:background="@color/myPrimary"
+        android:textAllCaps="false"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- RecyclerView para Mostrar Imágenes Seleccionadas -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewImages"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Botón para Guardar el Diario -->
     <Button
         android:id="@+id/btnSaveJournal"
         android:layout_width="match_parent"
@@ -41,11 +66,4 @@
         android:text="Guardar Diario"
         android:background="@color/myPrimary"
         android:textAllCaps="false"/>
-    
-    
-
-
-    
-    
-
 </LinearLayout>

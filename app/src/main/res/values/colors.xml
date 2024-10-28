@@ -4,4 +4,6 @@
     <color name="white">#FFFFFFFF</color>
     <color name="myPrimary">#9B598E</color>
     <color name="mySecondary">#ECACE2</color>
+    <color name="draft_background">#FADADD</color> <!-- Color para los borradores -->
+    <color name="regular_background">#FFFFFF</color> <!-- Color para entradas publicadas -->
 </resources>

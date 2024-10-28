@@ -5,9 +5,25 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@drawable/rounded_corners"
+
+    android:background="@drawable/background_selector"
     android:padding="16dp"
-    android:layout_marginBottom="16dp">
+    android:layout_marginBottom="16dp"
+    android:id="@+id/containerLayout">
+
+
+    <TextView
+        android:id="@+id/tvDraftLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/draft_label_background"
+        android:text="Draft"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:padding="4dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/tvJournalTitle1"
@@ -56,5 +72,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Delete"/>
+        <!-- Botón de Publicar, visible solo si es borrador -->
+        <Button
+            android:id="@+id/btnPublish"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Publish"
+            android:visibility="gone"/>
     </LinearLayout>
 </LinearLayout>

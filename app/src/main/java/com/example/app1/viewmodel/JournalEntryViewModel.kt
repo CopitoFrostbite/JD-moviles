@@ -30,7 +30,8 @@ class JournalEntryViewModel @Inject constructor(
 
     private val _createJournalEntryLiveData = MutableLiveData<Response<JournalEntry>>()
     val createJournalEntryLiveData: LiveData<Response<JournalEntry>> get() = _createJournalEntryLiveData
-
+    // LiveData para listar los journals desde la base de datos local
+    val localJournals: LiveData<List<JournalEntry>> = journalRepository.getLocalJournals()
     fun createJournalEntry(journalRequest: JournalApiService.JournalRequest) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -49,25 +50,42 @@ class JournalEntryViewModel @Inject constructor(
 
     fun saveDraftJournalEntry(journalEntry: JournalEntry) {
         viewModelScope.launch(Dispatchers.IO) {
-            journalRepository.saveDraft(journalEntry)  // Guardar en local como borrador
-
-            // Crear una respuesta simulada para el borrador
-            val response = Response.success(journalEntry)
-
-
+            journalRepository.saveDraft(journalEntry)  // Guardar en la base de datos local
         }
     }
 
-   // fun publishJournalEntry(journalId: String) {
-     //   viewModelScope.launch(Dispatchers.IO) {
-       //     val draftEntry = journalRepository.getJournalDraftById(journalId)
-         //   draftEntry?.let {
-           //     it.isDraft = false
-             //   val response = journalRepository.registerJournalEntry(it.toRequest())  // Enviar a la API
-               // _createJournalEntryLiveData.postValue(response)
-     //       }
-     //   }
-    //}
+    // Función para publicar el journal en la API cuando el usuario lo decida
+    fun publishJournalEntry(journalEntry: JournalEntry) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val response = journalRepository.registerJournalEntry(
+                    JournalApiService.JournalRequest(
+                        journalEntry.journalId,
+                        journalEntry.userId,
+                        journalEntry.title,
+                        journalEntry.content,
+                        journalEntry.mood,
+                        journalEntry.date
+                    )
+                )
+                if (response.isSuccessful) {
+                    // Actualiza el estado en la base de datos local si se publicó exitosamente
+                    journalRepository.updateJournalStatus(journalEntry.journalId, isDraft = false)
+                    _createJournalEntryLiveData.postValue(response)
+                } else {
+                    // Notifica el fallo de la publicación
+                    _createJournalEntryLiveData.postValue(response)
+                }
+            } catch (e: Exception) {
+                Log.e("JournalEntryViewModel", "Error publishing journal entry", e)
+                val errorResponse = Response.error<JournalEntry>(
+                    500,
+                    "Error publishing journal entry".toResponseBody("text/plain".toMediaTypeOrNull())
+                )
+                _createJournalEntryLiveData.postValue(errorResponse)
+            }
+        }
+    }
 
     fun updateJournalEntry(
         entryId: Int,
