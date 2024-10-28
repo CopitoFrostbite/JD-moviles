@@ -10,6 +10,7 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import androidx.work.*
 import com.example.app1.data.model.JournalEntry
+import com.example.app1.data.model.extensions.toRequest
 import com.example.app1.data.remote.JournalApiService
 import com.example.app1.data.repository.JournalEntryRepository
 import com.example.app1.workers.SyncWorker
@@ -31,7 +32,7 @@ class JournalEntryViewModel @Inject constructor(
     private val _createJournalEntryLiveData = MutableLiveData<Response<JournalEntry>>()
     val createJournalEntryLiveData: LiveData<Response<JournalEntry>> get() = _createJournalEntryLiveData
     // LiveData para listar los journals desde la base de datos local
-    val localJournals: LiveData<List<JournalEntry>> = journalRepository.getLocalJournals()
+
     fun createJournalEntry(journalRequest: JournalApiService.JournalRequest) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -57,32 +58,13 @@ class JournalEntryViewModel @Inject constructor(
     // Función para publicar el journal en la API cuando el usuario lo decida
     fun publishJournalEntry(journalEntry: JournalEntry) {
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val response = journalRepository.registerJournalEntry(
-                    JournalApiService.JournalRequest(
-                        journalEntry.journalId,
-                        journalEntry.userId,
-                        journalEntry.title,
-                        journalEntry.content,
-                        journalEntry.mood,
-                        journalEntry.date
-                    )
-                )
-                if (response.isSuccessful) {
-                    // Actualiza el estado en la base de datos local si se publicó exitosamente
-                    journalRepository.updateJournalStatus(journalEntry.journalId, isDraft = false)
-                    _createJournalEntryLiveData.postValue(response)
-                } else {
-                    // Notifica el fallo de la publicación
-                    _createJournalEntryLiveData.postValue(response)
-                }
-            } catch (e: Exception) {
-                Log.e("JournalEntryViewModel", "Error publishing journal entry", e)
-                val errorResponse = Response.error<JournalEntry>(
-                    500,
-                    "Error publishing journal entry".toResponseBody("text/plain".toMediaTypeOrNull())
-                )
-                _createJournalEntryLiveData.postValue(errorResponse)
+            val response = journalRepository.registerJournalEntry(journalEntry.toRequest())
+            if (response.isSuccessful) {
+                // Actualizar en la BD local para marcar que ya no es borrador
+                journalRepository.updateJournalStatus(journalEntry.journalId, isDraft = false)
+                _createJournalEntryLiveData.postValue(response)  // Notificar éxito
+            } else {
+                _createJournalEntryLiveData.postValue(response)  // Notificar error
             }
         }
     }

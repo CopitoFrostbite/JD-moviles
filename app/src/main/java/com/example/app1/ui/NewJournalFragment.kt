@@ -31,6 +31,7 @@ import com.example.app1.ui.adapters.ImagesAdapter
 import com.example.app1.utils.PreferencesHelper
 import com.example.app1.viewmodel.JournalEntryViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.UUID
 
 
 @AndroidEntryPoint
@@ -123,16 +124,25 @@ class NewJournalFragment : Fragment() {
 
             if (validateJournalInputs(title, content)) {
                 val mood = moodMapping[emotion] ?: 1
-                saveDraftJournalEntry(userId, title, content, mood)
 
-                // Intenta publicar el journal solo si hay conexión
+                // Guardar borrador y verificar conexión para publicar
+                val journalEntry = JournalEntry(
+                    journalId = UUID.randomUUID().toString(),
+                    userId = userId,
+                    title = title,
+                    content = content,
+                    mood = mood,
+                    isDraft = true
+                )
+
+                journalEntryViewModel.saveDraftJournalEntry(journalEntry)
+
                 if (isConnectedToInternet()) {
-                    journalEntryViewModel.createJournalEntry()
+                    journalEntryViewModel.publishJournalEntry(journalEntry)
                 } else {
                     Toast.makeText(requireContext(), "No hay conexión. El journal se guardó como borrador.", Toast.LENGTH_SHORT).show()
                 }
 
-                // Navegar al fragmento de diarios después de guardar
                 navigateToMyJournals()
             }
         }
@@ -140,12 +150,9 @@ class NewJournalFragment : Fragment() {
         // Observador para el estado de creación de entradas
         journalEntryViewModel.createJournalEntryLiveData.observe(viewLifecycleOwner, Observer { response ->
             if (response.isSuccessful) {
-                Toast.makeText(requireContext(), "Entrada de diario creada con éxito", Toast.LENGTH_SHORT).show()
-                navigateToMyJournals()
+                Toast.makeText(requireContext(), "Borrador publicado con éxito", Toast.LENGTH_SHORT).show()
             } else {
-                val errorBody = response.errorBody()?.string()
-                Log.e("NewJournalFragment", "Error al crear entrada: ${response.message()} - ${response.code()} - $errorBody")
-                Toast.makeText(requireContext(), "Error al crear entrada de diario: ${response.message()} - $errorBody", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Error al publicar borrador: ${response.message()}", Toast.LENGTH_SHORT).show()
             }
         })
     }
@@ -174,7 +181,7 @@ class NewJournalFragment : Fragment() {
 
     private fun saveImagesLocally(journalId: String) {
         selectedImages.forEach { imageUri ->
-            journalEntryViewModel.saveImageForJournal(journalId, imageUri)
+
         }
     }
 

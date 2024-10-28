@@ -30,39 +30,34 @@ class JournalEntryRepository @Inject constructor(
     private val context: Context
 ) {
     suspend fun registerJournalEntry(journalRequest: JournalApiService.JournalRequest): Response<JournalEntry> {
-        // Buscar la entrada de diario localmente usando el journalId del JournalRequest
         val journalEntry = journalDao.getEntryById(journalRequest.journalId)
 
-        // Verifica si la entrada es un borrador
+        // Si es un borrador, evitar enviar a la API
         if (journalEntry?.isDraft == true) {
-            Log.d("JournalRepository", "Entry is a draft and won't be sent to the API")
-            return Response.success(journalEntry)  // Retornamos la entrada localmente
+            return Response.success(journalEntry)
         }
 
-        // Verificación de red y envío solo si no es borrador
         return if (NetworkUtils.isNetworkAvailable(context)) {
             try {
-                val response = api.registerJournalEntry(journalRequest)  // Usamos journalRequest directamente
+                val response = api.registerJournalEntry(journalRequest)
                 if (response.isSuccessful) {
-                    // Actualiza la base de datos local para indicar que ya no es borrador
-                    journalEntry?.isDraft = false
-                    journalEntry?.let { journalDao.updateEntry(it) }  // Actualiza en la BD local
+                    journalEntry?.let {
+                        it.isDraft = false
+                        journalDao.updateEntry(it)
+                    }
                 }
                 response
             } catch (e: Exception) {
-                Log.e("JournalRepository", "Error registering journal", e)
-                Response.error(
-                    500,
-                    "Error during journal entry registration".toResponseBody("text/plain".toMediaTypeOrNull())
-                )
+                Response.error(500, "Error during journal entry registration".toResponseBody("text/plain".toMediaTypeOrNull()))
             }
         } else {
-            Log.e("JournalRepository", "No network available for journal entry registration")
-            Response.error(
-                503,
-                "No network available".toResponseBody("text/plain".toMediaTypeOrNull())
-            )
+            Response.error(503, "No network available".toResponseBody("text/plain".toMediaTypeOrNull()))
         }
+    }
+
+    // Método para obtener todas las entradas de diario locales (sin verificar conexión)
+    fun getLocalJournals(userId: String): LiveData<List<JournalEntry>> {
+        return journalDao.getAllEntriesByUserIdSync(userId)
     }
 
     suspend fun saveDraft(journalEntry: JournalEntry): Boolean {
@@ -80,6 +75,15 @@ class JournalEntryRepository @Inject constructor(
 
     suspend fun getJournalDraftById(journalId: String): JournalEntry? {
         return journalDao.getJournalById(journalId)
+    }
+
+    // Método para actualizar el estado de `isDraft` de una entrada de diario en la base de datos local
+    suspend fun updateJournalStatus(journalId: String, isDraft: Boolean) {
+        val journalEntry = journalDao.getEntryById(journalId)
+        journalEntry?.let {
+            it.isDraft = isDraft
+            journalDao.updateEntry(it)
+        }
     }
 
     suspend fun getAllJournalEntries(userId: String): List<JournalEntry> {

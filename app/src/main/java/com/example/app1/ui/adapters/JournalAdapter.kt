@@ -15,7 +15,10 @@ import com.example.app1.data.model.JournalEntry
 
 import java.util.Locale
 
-class JournalAdapter(private var journals: List<JournalEntry>) : RecyclerView.Adapter<JournalAdapter.JournalViewHolder>() {
+class JournalAdapter(
+    private var journals: List<JournalEntry>,
+    private val onPublishDraft: (JournalEntry) -> Unit  // Función para publicar borrador individual
+) : RecyclerView.Adapter<JournalAdapter.JournalViewHolder>() {
 
     class JournalViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val title: TextView = itemView.findViewById(R.id.tvJournalTitle1)
@@ -24,10 +27,9 @@ class JournalAdapter(private var journals: List<JournalEntry>) : RecyclerView.Ad
         val mood: TextView = itemView.findViewById(R.id.tvJournalMood1)
         val btnEdit: Button = itemView.findViewById(R.id.btnEdit1)
         val btnDelete: Button = itemView.findViewById(R.id.btnDelete1)
-        val containerLayout: View = itemView.findViewById(R.id.containerLayout) // Asegúrate de que el id sea correcto
-        val draftLabel: View = itemView.findViewById(R.id.tvDraftLabel)
-        val btnPublish: View = itemView.findViewById(R.id.btnPublish)
-
+        val btnPublish: Button = itemView.findViewById(R.id.btnPublish)
+        val draftLabel: TextView = itemView.findViewById(R.id.tvDraftLabel)
+        val containerLayout: View = itemView.findViewById(R.id.containerLayout)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): JournalViewHolder {
@@ -35,7 +37,6 @@ class JournalAdapter(private var journals: List<JournalEntry>) : RecyclerView.Ad
         return JournalViewHolder(view)
     }
 
-    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: JournalViewHolder, position: Int) {
         val journal = journals[position]
 
@@ -43,37 +44,28 @@ class JournalAdapter(private var journals: List<JournalEntry>) : RecyclerView.Ad
         holder.title.text = journal.title
         holder.date.text = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(journal.date)
         holder.time.text = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(journal.date)
-
-        // Mostrar el estado de ánimo basado en el valor de `mood`
         holder.mood.text = "Mood: " + getMoodText(journal.mood)
 
-        // Obtener los colores desde el contexto
-        val draftBackgroundColor = ContextCompat.getColor(holder.itemView.context, R.color.draft_background)
-        val regularBackgroundColor = ContextCompat.getColor(holder.itemView.context, R.color.regular_background)
+        // Cambiar el color de fondo y la visibilidad del label de borrador
+                if (journal.isDraft) {
+                    holder.containerLayout.isSelected = true // Aplica el color de fondo de borrador
+                    holder.draftLabel.visibility = View.VISIBLE
+                    holder.btnPublish.visibility = View.VISIBLE
+                } else {
+                    holder.containerLayout.isSelected = false // Aplica el color de fondo regular
+                    holder.draftLabel.visibility = View.GONE
+                    holder.btnPublish.visibility = View.GONE
+                }
 
-        // Cambiar el color de fondo si es borrador
-        if (journal.isDraft) {
-            holder.containerLayout.setBackgroundColor(draftBackgroundColor)
-            holder.draftLabel.visibility = View.VISIBLE
-            holder.btnPublish.visibility = View.VISIBLE
-        } else {
-            holder.containerLayout.setBackgroundColor(regularBackgroundColor)
-            holder.draftLabel.visibility = View.GONE
-            holder.btnPublish.visibility = View.GONE
-        }
-
-        // Configurar acciones de botones Edit y Delete
-        holder.btnEdit.setOnClickListener {
-            // Acción para editar el journal
-        }
-
-        holder.btnDelete.setOnClickListener {
-            // Acción para eliminar el journal
-        }
-
-        // Acción para el botón "Publicar"
+        // Acciones de botones Editar, Eliminar y Publicar
         holder.btnPublish.setOnClickListener {
-            // Lógica para publicar el journal (cambia `isDraft` a false y actualiza en ViewModel o DB)
+            onPublishDraft(journal)
+        }
+        holder.btnEdit.setOnClickListener {
+            // Acción para editar
+        }
+        holder.btnDelete.setOnClickListener {
+            // Acción para eliminar
         }
     }
 
@@ -84,7 +76,6 @@ class JournalAdapter(private var journals: List<JournalEntry>) : RecyclerView.Ad
         notifyDataSetChanged()
     }
 
-    // Método auxiliar para convertir `mood` en texto
     private fun getMoodText(mood: Int): String {
         return when (mood) {
             1 -> "Triste"

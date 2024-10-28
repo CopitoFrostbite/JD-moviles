@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
@@ -34,7 +35,11 @@ class MyJournalsFragment : Fragment() {
         // Configurar RecyclerView
         val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(context)
-        journalAdapter = JournalAdapter(listOf())  // Iniciar con una lista vacía
+
+        // Configura el adaptador pasando la función `onPublishDraft`
+        journalAdapter = JournalAdapter(listOf()) { draft ->
+            journalViewModel.publishJournalEntry(draft)  // Publicar borrador individual
+        }
         recyclerView.adapter = journalAdapter
 
         // Obtener el userId del usuario logueado desde PreferencesHelper
@@ -43,6 +48,19 @@ class MyJournalsFragment : Fragment() {
         // Observar los journals y actualizar la UI
         journalViewModel.getUserJournals(userId).observe(viewLifecycleOwner) { journals ->
             journalAdapter.updateJournals(journals)
+        }
+
+        // Observar el estado de publicación para notificar al usuario
+        journalViewModel.createJournalEntryLiveData.observe(viewLifecycleOwner) { response ->
+            if (response.isSuccessful) {
+                Toast.makeText(requireContext(), "Borrador publicado con éxito", Toast.LENGTH_SHORT).show()
+                // Recargar la lista de journals después de la publicación
+                journalViewModel.getUserJournals(userId).observe(viewLifecycleOwner) { journals ->
+                    journalAdapter.updateJournals(journals)
+                }
+            } else {
+                Toast.makeText(requireContext(), "Error al publicar borrador: ${response.message()}", Toast.LENGTH_SHORT).show()
+            }
         }
 
         return view
