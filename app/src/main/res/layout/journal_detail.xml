@@ -1,0 +1,69 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/rounded_background"
+    android:elevation="8dp"
+    android:gravity="center_horizontal">
+
+    <!-- Título del Journal -->
+    <TextView
+        android:id="@+id/tvJournalTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Journal Title"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:paddingBottom="12dp"
+        android:textColor="@color/primary_text_color" />
+
+    <!-- Fecha del Journal -->
+    <TextView
+        android:id="@+id/tvJournalDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="2024-06-08"
+        android:paddingBottom="4dp"
+        android:textColor="@color/secondary_text_color" />
+
+    <!-- Hora del Journal -->
+    <TextView
+        android:id="@+id/tvJournalTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="10:00 AM"
+        android:paddingBottom="12dp"
+        android:textColor="@color/secondary_text_color" />
+
+    <!-- Contenido del Journal -->
+    <TextView
+        android:id="@+id/tvJournalContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Este es el contenido del journal..."
+        android:paddingBottom="16dp"
+        android:textSize="16sp"
+        android:textColor="@color/primary_text_color" />
+
+    <!-- Estado de ánimo -->
+    <TextView
+        android:id="@+id/tvJournalMood"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Mood: Feliz"
+        android:paddingBottom="16dp"
+        android:textStyle="italic"
+        android:textColor="@color/accent_color" />
+
+    <!-- Botón de Cerrar -->
+    <Button
+        android:id="@+id/btnClose"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cerrar"
+        android:background="@drawable/button_selector"
+        android:textColor="@android:color/white"
+        android:padding="8dp"
+        android:layout_gravity="center_horizontal"/>
+</LinearLayout>

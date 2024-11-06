@@ -1,0 +1,63 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Filtrar por"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:paddingBottom="8dp" />
+
+    <!-- Filtros de Draft -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingBottom="8dp">
+
+        <Button
+            android:id="@+id/btnDraft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Draft" />
+
+        <Button
+            android:id="@+id/btnNotDraft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No Draft"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <!-- Filtros de Mood -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Estado de Ánimo"
+        android:paddingBottom="4dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnHappyMood"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="😊" />
+
+        <Button
+            android:id="@+id/btnSadMood"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="😢"
+            android:layout_marginStart="8dp" />
+
+        <!-- Agrega más botones de estado de ánimo si es necesario -->
+    </LinearLayout>
+</LinearLayout>

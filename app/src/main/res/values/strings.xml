@@ -4,4 +4,11 @@
     <string name="navigation_drawer_close">Close</string>
     <string name="welcome_user">Bienvenido, %1$s</string>
     <string name="welcome_guest">Bienvenido</string>
+    <string-array name="sort_options">
+        <item>Nombre</item>
+        <item>Fecha</item>
+        <item>Estado de Edición</item>
+        <item>Estado de Borrador</item>
+        <item>Estado de Ánimo</item>
+    </string-array>
 </resources>

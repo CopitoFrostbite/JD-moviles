@@ -17,9 +17,11 @@ import java.util.Locale
 
 class JournalAdapter(
     private var journals: List<JournalEntry>,
-    private val onPublishDraft: (JournalEntry) -> Unit  // Función para publicar borrador individual
+    private val onPublishDraft: (JournalEntry) -> Unit,
+    private val onJournalClick: (journalId: String) -> Unit
 ) : RecyclerView.Adapter<JournalAdapter.JournalViewHolder>() {
 
+    private var selectedPosition = -1
     class JournalViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val title: TextView = itemView.findViewById(R.id.tvJournalTitle1)
         val date: TextView = itemView.findViewById(R.id.tvJournalDate1)
@@ -32,12 +34,13 @@ class JournalAdapter(
         val containerLayout: View = itemView.findViewById(R.id.containerLayout)
     }
 
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): JournalViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.journal_item_layout, parent, false)
         return JournalViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: JournalViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: JournalViewHolder, @SuppressLint("RecyclerView") position: Int) {
         val journal = journals[position]
 
         // Configurar título, fecha y hora
@@ -56,6 +59,21 @@ class JournalAdapter(
                     holder.draftLabel.visibility = View.GONE
                     holder.btnPublish.visibility = View.GONE
                 }
+
+        // Configura el fondo según si está seleccionada
+        holder.containerLayout.isSelected = position == selectedPosition
+
+        // Configura el OnClickListener para seleccionar la tarjeta
+        holder.containerLayout.setOnClickListener {
+            // Actualiza la posición seleccionada y notifica el cambio
+            val previousPosition = selectedPosition
+            selectedPosition = position
+            notifyItemChanged(previousPosition)
+            notifyItemChanged(selectedPosition)
+
+            // Llama a onJournalClick para mostrar detalles o ejecutar alguna acción
+            onJournalClick(journal.journalId)
+        }
 
         // Acciones de botones Editar, Eliminar y Publicar
         holder.btnPublish.setOnClickListener {

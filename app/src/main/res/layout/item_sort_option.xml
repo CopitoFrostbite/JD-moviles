@@ -1,0 +1,37 @@
+<!-- res/layout/item_sort_option.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:gravity="center_vertical"
+    android:background="?attr/selectableItemBackground">
+
+    <!-- Icono de la opción -->
+    <ImageView
+        android:id="@+id/iconOption"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_sort_date"
+        app:tint="@color/primary_text_color" />
+
+    <!-- Nombre de la opción -->
+    <TextView
+        android:id="@+id/textOptionName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:text="Fecha"
+        android:textSize="16sp"
+        android:textColor="@color/primary_text_color" />
+
+    <!-- Flecha de dirección (ascendente/descendente) -->
+    <ImageView
+        android:id="@+id/iconSortDirection"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_arrow_downward"
+        android:visibility="gone" />
+</LinearLayout>

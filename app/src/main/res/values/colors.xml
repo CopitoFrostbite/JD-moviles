@@ -6,4 +6,15 @@
     <color name="mySecondary">#ECACE2</color>
     <color name="draft_background">#FADADD</color> <!-- Color para los borradores -->
     <color name="regular_background">#FFFFFF</color> <!-- Color para entradas publicadas -->
+    <color name="primary_text_color">#000000</color>
+    <color name="secondary_text_color">#757575</color>
+    <color name="accent_color">#FF4081</color>
+    <color name="dialog_background">#F5F5F5</color>
+    <color name="button_background">#6200EE</color>
+    <color name="button_default_color">#6200EE</color> <!-- Color normal del botón -->
+    <color name="button_pressed_color">#3700B3</color> <!-- Color cuando se presiona el botón -->
+    <color name="button_focused_color">#BB86FC</color> <!-- Color cuando el botón tiene el foco -->
+    <color name="card_default_color">#FFFFFF</color> <!-- Color por defecto de la tarjeta -->
+    <color name="card_pressed_color">#FFEBEE</color> <!-- Color cuando se presiona la tarjeta -->
+    <color name="card_selected_color">#FFCDD2</color> <!-- Color cuando la tarjeta está seleccionada -->
 </resources>
