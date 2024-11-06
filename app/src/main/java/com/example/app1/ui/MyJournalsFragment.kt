@@ -1,12 +1,16 @@
 package com.example.app1.ui
 
+import android.app.DatePickerDialog
 import android.graphics.drawable.LayerDrawable
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.AdapterView
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.RadioGroup
 import android.widget.SearchView
@@ -31,6 +35,7 @@ import com.example.app1.viewmodel.JournalEntryViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.Calendar
 
 @AndroidEntryPoint
 class MyJournalsFragment : Fragment() {
@@ -55,6 +60,8 @@ class MyJournalsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_my_journals, container, false)
+
+
 
         // Configura el RecyclerView y el Adaptador
         journalAdapter = JournalAdapter(listOf(), { draft -> journalViewModel.publishJournalEntry(draft) }, { journalId -> showJournalDetails(journalId) })
@@ -82,8 +89,94 @@ class MyJournalsFragment : Fragment() {
 
 
 
+
+
         return view
     }
+
+    private fun setupFilterListeners(view: View) {
+        // Configura los botones de filtro para favoritos
+
+
+        // Configura los botones de filtro para borradores
+        view.findViewById<Button>(R.id.btnDraft).setOnClickListener {
+            applyFilter { it.isDraft }
+        }
+        view.findViewById<Button>(R.id.btnNotDraft).setOnClickListener {
+            applyFilter { !it.isDraft }
+        }
+
+
+
+        // Configura el filtro de búsqueda por nombre
+        val nameFilterEditText = view.findViewById<EditText>(R.id.etNameFilter)
+        nameFilterEditText.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                val query = nameFilterEditText.text.toString()
+                applyFilter { it.title.contains(query, ignoreCase = true) }
+                true
+            } else {
+                false
+            }
+        }
+
+        // Configura el botón de filtro de fecha (abre un DatePickerDialog)
+        view.findViewById<Button>(R.id.btnDateFilter).setOnClickListener {
+            val datePicker = DatePickerDialog(requireContext(), { _, year, month, dayOfMonth ->
+                // Crear una instancia de Calendar con la fecha seleccionada
+                val selectedDate = Calendar.getInstance().apply {
+                    set(Calendar.YEAR, year)
+                    set(Calendar.MONTH, month)
+                    set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                    set(Calendar.HOUR_OF_DAY, 0) // Ignora la hora para comparar solo la fecha
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+
+                // Aplicar el filtro comparando la fecha ignorando la hora
+                applyFilter { journalEntry ->
+                    val journalDate = Calendar.getInstance().apply {
+                        timeInMillis = journalEntry.date // Asumiendo que `journalEntry.date` es un Long en milisegundos
+                        set(Calendar.HOUR_OF_DAY, 0) // Ignora la hora
+                        set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    }.timeInMillis
+
+                    journalDate == selectedDate // Comparación solo de la fecha (día, mes, año)
+                }
+            }, Calendar.getInstance().get(Calendar.YEAR), Calendar.getInstance().get(Calendar.MONTH), Calendar.getInstance().get(Calendar.DAY_OF_MONTH))
+
+            datePicker.show()
+        }
+
+        // Configura los botones de filtro de estado de ánimo
+        view.findViewById<Button>(R.id.btnHappyMood).setOnClickListener {
+            applyFilter { it.mood == 5 } // Asume que 5 es "Feliz"
+        }
+        view.findViewById<Button>(R.id.btnSadMood).setOnClickListener {
+            applyFilter { it.mood == 1 } // Asume que 1 es "Triste"
+        }
+        view.findViewById<Button>(R.id.btnAngryMood).setOnClickListener {
+            applyFilter { it.mood == 2 } // Asume que 2 es "Ira"
+        }
+        view.findViewById<Button>(R.id.btnSurprisedMood).setOnClickListener {
+            applyFilter { it.mood == 3 } // Asume que 3 es "Sorpresa"
+        }
+        view.findViewById<Button>(R.id.btnFearMood).setOnClickListener {
+            applyFilter { it.mood == 4 } // Asume que 4 es "Miedo"
+        }
+        view.findViewById<Button>(R.id.btnDiscontentMood).setOnClickListener {
+            applyFilter { it.mood == 6 } // Asume que 6 es "Inconforme"
+        }
+
+        // Configura el botón OK para aplicar todos los filtros actuales
+        view.findViewById<Button>(R.id.btnFilterOk).setOnClickListener {
+            // Opcionalmente, podrías combinar filtros aquí si deseas aplicar múltiples criterios
+        }
+    }
+
 
     private fun showSortBottomSheet() {
         val bottomSheetView = layoutInflater.inflate(R.layout.bottom_sheet_sort, null)
@@ -113,31 +206,77 @@ class MyJournalsFragment : Fragment() {
         val dialog = BottomSheetDialog(requireContext())
         dialog.setContentView(bottomSheetView)
 
-        // Encuentra los elementos de la vista inflada para aplicar filtros
-        val btnDraft = bottomSheetView.findViewById<Button>(R.id.btnDraft)
-        val btnNotDraft = bottomSheetView.findViewById<Button>(R.id.btnNotDraft)
-        val btnHappyMood = bottomSheetView.findViewById<Button>(R.id.btnHappyMood)
-        val btnSadMood = bottomSheetView.findViewById<Button>(R.id.btnSadMood)
-
-        // Listener para el filtro de Draft
-        btnDraft.setOnClickListener {
+        // Configura los botones de filtro para borradores dentro del BottomSheet
+        bottomSheetView.findViewById<Button>(R.id.btnDraft)?.setOnClickListener {
             applyFilter { it.isDraft }
             dialog.dismiss()
         }
-
-        btnNotDraft.setOnClickListener {
+        bottomSheetView.findViewById<Button>(R.id.btnNotDraft)?.setOnClickListener {
             applyFilter { !it.isDraft }
             dialog.dismiss()
         }
 
-        // Listener para el filtro de estado de ánimo
-        btnHappyMood.setOnClickListener {
+        // Configura el filtro de búsqueda por nombre dentro del BottomSheet
+        val nameFilterEditText = bottomSheetView.findViewById<EditText>(R.id.etNameFilter)
+        nameFilterEditText?.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                val query = nameFilterEditText.text.toString()
+                applyFilter { it.title.contains(query, ignoreCase = true) }
+                dialog.dismiss()
+                true
+            } else {
+                false
+            }
+        }
+
+        // Configura el botón de filtro de fecha dentro del BottomSheet
+        bottomSheetView.findViewById<Button>(R.id.btnDateFilter)?.setOnClickListener {
+            val datePicker = DatePickerDialog(requireContext(), { _, year, month, dayOfMonth ->
+                val selectedDate = Calendar.getInstance().apply {
+                    set(year, month, dayOfMonth, 0, 0, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+
+                applyFilter { journalEntry ->
+                    val journalDate = Calendar.getInstance().apply {
+                        timeInMillis = journalEntry.date
+                        set(Calendar.HOUR_OF_DAY, 0)
+                        set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    }.timeInMillis
+
+                    journalDate == selectedDate
+                }
+                dialog.dismiss()
+            }, Calendar.getInstance().get(Calendar.YEAR), Calendar.getInstance().get(Calendar.MONTH), Calendar.getInstance().get(Calendar.DAY_OF_MONTH))
+
+            datePicker.show()
+        }
+
+        // Configura los botones de filtro de estado de ánimo dentro del BottomSheet
+        bottomSheetView.findViewById<Button>(R.id.btnHappyMood)?.setOnClickListener {
             applyFilter { it.mood == 5 } // Asume que 5 es "Feliz"
             dialog.dismiss()
         }
-
-        btnSadMood.setOnClickListener {
+        bottomSheetView.findViewById<Button>(R.id.btnSadMood)?.setOnClickListener {
             applyFilter { it.mood == 1 } // Asume que 1 es "Triste"
+            dialog.dismiss()
+        }
+        bottomSheetView.findViewById<Button>(R.id.btnAngryMood)?.setOnClickListener {
+            applyFilter { it.mood == 2 } // Asume que 2 es "Ira"
+            dialog.dismiss()
+        }
+        bottomSheetView.findViewById<Button>(R.id.btnSurprisedMood)?.setOnClickListener {
+            applyFilter { it.mood == 3 } // Asume que 3 es "Sorpresa"
+            dialog.dismiss()
+        }
+        bottomSheetView.findViewById<Button>(R.id.btnFearMood)?.setOnClickListener {
+            applyFilter { it.mood == 4 } // Asume que 4 es "Miedo"
+            dialog.dismiss()
+        }
+        bottomSheetView.findViewById<Button>(R.id.btnDiscontentMood)?.setOnClickListener {
+            applyFilter { it.mood == 6 } // Asume que 6 es "Inconforme"
             dialog.dismiss()
         }
 
