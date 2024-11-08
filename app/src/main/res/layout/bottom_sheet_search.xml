@@ -6,35 +6,32 @@
     android:padding="16dp"
     android:background="@color/dialog_background">
 
-    <!-- Favoritos Section -->
     <!-- Name Filter Section -->
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="45dp"
         android:layout_marginBottom="16dp"
-        app:cardElevation="4dp"
+        android:padding="8dp"
         app:cardBackgroundColor="@color/card_default_color"
-        android:padding="8dp">
+        app:cardElevation="4dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Buscar por Nombre"
-            android:textSize="16sp"
-            android:textStyle="bold"
             android:paddingBottom="8dp"
-            android:textColor="@color/primary_text_color" />
+            android:text="Buscar por Nombre"
+            android:textColor="@color/primary_text_color"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <EditText
             android:id="@+id/etNameFilter"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:background="@drawable/background_selector"
             android:hint="Buscar por nombre"
-            android:textColor="@color/primary_text_color"
-            android:background="@drawable/background_selector" />
+            android:textColor="@color/primary_text_color" />
     </androidx.cardview.widget.CardView>
-
-
 
     <!-- Date Filter Section -->
     <androidx.cardview.widget.CardView
@@ -44,15 +41,6 @@
         app:cardElevation="4dp"
         app:cardBackgroundColor="@color/card_default_color"
         android:padding="8dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Filtrar por Fecha"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:paddingBottom="8dp"
-            android:textColor="@color/primary_text_color" />
 
         <Button
             android:id="@+id/btnDateFilter"
@@ -71,15 +59,6 @@
         app:cardElevation="4dp"
         app:cardBackgroundColor="@color/card_default_color"
         android:padding="8dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Estado de Borrador"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:paddingBottom="8dp"
-            android:textColor="@color/primary_text_color" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -115,75 +94,79 @@
         app:cardBackgroundColor="@color/card_default_color"
         android:padding="8dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Estado de Ánimo"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:paddingBottom="8dp"
-            android:textColor="@color/primary_text_color" />
-
-        <LinearLayout
+        <GridLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:columnCount="3"
             android:orientation="horizontal"
-            android:gravity="center">
+            android:alignmentMode="alignMargins"
+            android:useDefaultMargins="true">
 
             <Button
                 android:id="@+id/btnHappyMood"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
                 android:text="😊"
                 android:backgroundTint="@color/button_background"
                 android:textColor="@color/white" />
 
             <Button
                 android:id="@+id/btnSadMood"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
                 android:text="😢"
                 android:backgroundTint="@color/button_background"
-                android:textColor="@color/white"
-                android:layout_marginStart="8dp" />
+                android:textColor="@color/white" />
 
             <Button
                 android:id="@+id/btnAngryMood"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
                 android:text="😡"
                 android:backgroundTint="@color/button_background"
-                android:textColor="@color/white"
-                android:layout_marginStart="8dp" />
+                android:textColor="@color/white" />
 
             <Button
                 android:id="@+id/btnSurprisedMood"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
                 android:text="😲"
                 android:backgroundTint="@color/button_background"
-                android:textColor="@color/white"
-                android:layout_marginStart="8dp" />
+                android:textColor="@color/white" />
 
             <Button
                 android:id="@+id/btnFearMood"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
                 android:text="😱"
                 android:backgroundTint="@color/button_background"
-                android:textColor="@color/white"
-                android:layout_marginStart="8dp" />
+                android:textColor="@color/white" />
 
             <Button
                 android:id="@+id/btnDiscontentMood"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
                 android:text="😒"
                 android:backgroundTint="@color/button_background"
-                android:textColor="@color/white"
-                android:layout_marginStart="8dp" />
-        </LinearLayout>
+                android:textColor="@color/white" />
+        </GridLayout>
     </androidx.cardview.widget.CardView>
+
+    <Button
+        android:id="@+id/btnClearFilters"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Limpiar Filtros"
+        android:layout_gravity="end"
+        android:padding="8dp"
+        android:backgroundTint="@color/accent_color"
+        android:textColor="@color/white" />
 
     <!-- OK Button -->
     <Button
