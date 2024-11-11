@@ -10,6 +10,7 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import androidx.work.*
 import com.example.app1.data.model.User
+import com.example.app1.data.remote.JournalApiService
 import com.example.app1.data.repository.UserRepository
 import com.example.app1.workers.SyncWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -88,6 +89,25 @@ class UserViewModel @Inject constructor(
                 )
                 result.postValue(errorResponse)
             }
+        }
+        return result
+    }
+
+    fun updateUserData(updatedUser: User): LiveData<Response<JournalApiService.UserResponse>> {
+        val result = MutableLiveData<Response<JournalApiService.UserResponse>>()
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = userRepository.updateUserData(updatedUser)
+            result.postValue(response)
+        }
+        return result
+    }
+
+    fun updateProfileImage(userId: String, avatarPart: MultipartBody.Part): LiveData<Response<JournalApiService.UserResponse>> {
+        val result = MutableLiveData<Response<JournalApiService.UserResponse>>()
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = userRepository.updateProfileImage(userId, avatarPart)
+            result.postValue(response)
         }
         return result
     }

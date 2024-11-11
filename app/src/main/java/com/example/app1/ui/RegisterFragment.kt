@@ -35,6 +35,7 @@ import java.io.InputStream
 class RegisterFragment : Fragment() {
 
     private val userViewModel: UserViewModel by viewModels()
+
     private var selectedImageUri: Uri? = null
 
     // Para seleccionar la imagen desde el dispositivo

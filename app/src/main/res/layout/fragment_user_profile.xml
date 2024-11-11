@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -9,7 +10,7 @@
     android:padding="16dp"
     tools:context=".UserProfileFragment">
 
-    <!-- Foto de perfil -->
+    <!-- Foto de perfil (actúa como botón para cambiar imagen) -->
     <ImageView
         android:id="@+id/profile_image"
         android:layout_width="90dp"
@@ -25,16 +26,6 @@
         android:src="@drawable/perro"
         android:clipToOutline="true" />
 
-
-    <!-- Botón para cambiar la foto de perfil -->
-    <Button
-        android:id="@+id/btn_change_profile_image"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginBottom="16dp"
-        android:text="Cambiar imagen" />
-
     <!-- Nombre de usuario -->
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="300dp"
@@ -45,13 +36,12 @@
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/username"
             android:layout_width="300dp"
-            android:layout_gravity="center"
             android:layout_height="wrap_content"
             android:hint="Nombre de usuario"
             android:inputType="text" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Correo electrónico -->
+    <!-- Correo electrónico (no editable) -->
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="300dp"
         android:layout_gravity="center"
@@ -61,13 +51,13 @@
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/email"
             android:layout_width="300dp"
-            android:layout_gravity="center"
             android:layout_height="wrap_content"
             android:hint="Correo electrónico"
-            android:inputType="textEmailAddress" />
+            android:inputType="textEmailAddress"
+            android:enabled="false" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Nombre completo -->
+    <!-- Contraseña (editable) -->
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="300dp"
         android:layout_gravity="center"
@@ -75,15 +65,29 @@
         android:layout_marginBottom="16dp">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/full_name"
+            android:id="@+id/password"
             android:layout_width="300dp"
-            android:layout_gravity="center"
+            android:layout_height="wrap_content"
+            android:hint="Contraseña"
+            android:inputType="textPassword" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Nombre(s) -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="300dp"
+        android:layout_gravity="center"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/first_name"
+            android:layout_width="300dp"
             android:layout_height="wrap_content"
             android:hint="Nombre(s)"
             android:inputType="textPersonName" />
     </com.google.android.material.textfield.TextInputLayout>
 
-
+    <!-- Apellido(s) -->
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="300dp"
         android:layout_gravity="center"
@@ -91,15 +95,12 @@
         android:layout_marginBottom="16dp">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/last_names"
+            android:id="@+id/last_name"
             android:layout_width="300dp"
-            android:layout_gravity="center"
             android:layout_height="wrap_content"
             android:hint="Apellido(s)"
             android:inputType="textPersonName" />
     </com.google.android.material.textfield.TextInputLayout>
-
-
 
     <!-- Número de diarios -->
     <com.google.android.material.textfield.TextInputLayout
@@ -111,18 +112,18 @@
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/journal_count"
             android:layout_width="300dp"
-            android:layout_gravity="center"
             android:layout_height="wrap_content"
-            android:hint="Diarios: "
+            android:hint="Diarios"
             android:inputType="number"
             android:enabled="false" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Botón para editar -->
+    <!-- Botón para editar perfil (datos) -->
     <Button
         android:id="@+id/btn_edit_profile"
         android:layout_width="300dp"
         android:layout_gravity="center"
         android:layout_height="wrap_content"
         android:text="Editar información" />
+
 </LinearLayout>

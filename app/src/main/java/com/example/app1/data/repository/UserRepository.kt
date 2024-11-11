@@ -158,6 +158,76 @@ class UserRepository @Inject constructor(
         }
         emit(user)
     }
+    suspend fun updateUserData(user: User): Response<JournalApiService.UserResponse> {
+        return if (NetworkUtils.isNetworkAvailable(context)) {
+            try {
+                val response = api.updateUser(user.userId, user)
+                if (response.isSuccessful) {
+                    response.body()?.let {
+                        // Crear el User con UserResponse para actualizar la base de datos local
+                        val updatedUser = User(
+                            userId = it.userId,
+                            username = it.username,
+                            name = it.name,
+                            lastname = it.lastname,
+                            email = it.email,
+                            password = "",
+                            profilePicture = ""
+                        )
+                        //userDao.clearUsers()
+                        userDao.insertUser(updatedUser)
+                    }
+                }
+                response
+            } catch (e: Exception) {
+                Response.error(500, "Error al actualizar datos".toResponseBody("text/plain".toMediaTypeOrNull()))
+            }
+        } else {
+            Response.error(503, "No hay conexión de red".toResponseBody("text/plain".toMediaTypeOrNull()))
+        }
+    }
+
+    suspend fun updateProfileImage(userId: String, avatar: MultipartBody.Part): Response<JournalApiService.UserResponse> {
+        return if (NetworkUtils.isNetworkAvailable(context)) {
+            try {
+                // Llama a la API para actualizar la imagen de perfil del usuario
+                val response = api.updateUserProfileImage(userId, avatar)
+                val userResponse1 = response.body()
+                if (userResponse1 != null) {
+                    Log.d("UserRepository", "Datos de UserResponse: userId=${userResponse1.userId}, username=${userResponse1.username}, profilePicture=${userResponse1.profilePicture}")
+                } else {
+                    Log.e("UserRepository", "El cuerpo de la respuesta es null")
+                }
+                if (response.isSuccessful) {
+                    response.body()?.let { userResponse ->
+                        // Actualiza la base de datos local con la respuesta de la API
+                        val updatedUser = User(
+                            userId = userResponse.userId,
+                            username = userResponse.username,
+                            name = userResponse.name,
+                            lastname = userResponse.lastname,
+                            email = userResponse.email,
+                            password = "", // La contraseña no debe almacenarse en texto plano
+                            profilePicture = userResponse.profilePicture
+                        )
+                        //userDao.clearUsers() // Limpia los usuarios previos
+                        userDao.insertUser(updatedUser) // Guarda el usuario actualizado
+                    }
+                }
+                response
+            } catch (e: Exception) {
+                Log.e("UserRepository", "Error al actualizar imagen", e)
+                Response.error(
+                    500, "Error al actualizar imagen".toResponseBody("text/plain".toMediaTypeOrNull())
+                )
+            }
+        } else {
+            Log.w("UserRepository", "No hay conexión de red")
+            Response.error(
+                503, "No hay conexión de red".toResponseBody("text/plain".toMediaTypeOrNull())
+            )
+        }
+    }
 
     private fun uriToFile(uri: Uri): File {
         val contentResolver = context.contentResolver
