@@ -11,25 +11,6 @@
         android:layout_height="match_parent"
         android:layout_marginTop="16dp" />
 
-    <FrameLayout
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_gravity="bottom|end"
-        android:layout_marginEnd="5dp"
-        android:layout_marginBottom="30dp"
-        android:background="@drawable/rounded_background_button"
-
-        android:elevation="8dp">
-
-        <ImageView
-            android:id="@+id/fabSortDirection"
-            android:layout_width="10dp"
-            android:layout_height="20dp"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_arrow_downward"
-            app:tint="@color/white" />
-    </FrameLayout>
-
     <!-- Botón flotante para buscar, en la esquina superior derecha -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabSearch"
@@ -53,6 +34,35 @@
         app:tint="@color/myPrimary"
         app:backgroundTint="@color/dialog_background" />
 
-    <!-- Botón flotante más pequeño para la dirección de orden, cerca del fabSort -->
+    <!-- Botón para la dirección de orden, en la esquina inferior derecha cerca del fabSort -->
+    <FrameLayout
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="5dp"
+        android:layout_marginBottom="30dp"
+        android:background="@drawable/rounded_background_button"
+        android:elevation="8dp">
+
+        <ImageView
+            android:id="@+id/fabSortDirection"
+            android:layout_width="10dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_arrow_downward"
+            app:tint="@color/white" />
+    </FrameLayout>
+
+    <!-- Botón flotante para sincronización, en la esquina inferior izquierda -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabSync"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_margin="16dp"
+        android:src="@drawable/rounded_background_button"
+        app:maxImageSize="35dp"
+        app:backgroundTint="@color/dialog_background"
+        app:tint="@color/myPrimary" />
 
 </FrameLayout>

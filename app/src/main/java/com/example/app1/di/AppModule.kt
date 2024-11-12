@@ -92,6 +92,8 @@ object AppModule {
         return retrofit.create(JournalApiService::class.java)
     }
 
+    @Singleton
+    @Provides
     fun provideUserRepository(
         api: JournalApiService,
         userDao: UserDao,

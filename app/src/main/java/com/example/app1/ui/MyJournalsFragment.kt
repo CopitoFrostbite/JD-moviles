@@ -1,8 +1,10 @@
 package com.example.app1.ui
 
+import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.content.Context
 import android.graphics.drawable.LayerDrawable
+import android.net.ConnectivityManager
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -61,6 +63,7 @@ class MyJournalsFragment : Fragment() {
     private val tempFilters: MutableList<(JournalEntry) -> Boolean> = mutableListOf()
     private var searchBottomSheetDialog: BottomSheetDialog? = null
 
+    @SuppressLint("MissingInflatedId")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -87,11 +90,33 @@ class MyJournalsFragment : Fragment() {
             showSearchBottomSheet()
         }
 
-        // Observa los journals del ViewModel y guarda la lista completa
-        journalViewModel.getUserJournals(PreferencesHelper.getUserId(requireContext()) ?: "").observe(viewLifecycleOwner) { journals ->
-            journalList = journals
-            journalAdapter.updateJournals(journalList) // Actualiza el adaptador con la lista inicial
+        // Botón de sincronización manual
+
+
+        view.findViewById<Button>(R.id.fabSync).setOnClickListener {
+            syncAllEntries()  // Llama a la función de sincronización manual
+            Toast.makeText(requireContext(), "Sincronización en proceso...", Toast.LENGTH_SHORT).show()
         }
+
+        // Observa el resultado de la sincronización
+        journalViewModel.syncStatus.observe(viewLifecycleOwner) { result ->
+            if (result) {
+                Toast.makeText(requireContext(), "Sincronización exitosa", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(requireContext(), "Error en la sincronización", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Observa y actualiza la lista de entradas de diario
+        journalViewModel.getUserJournals(PreferencesHelper.getUserId(requireContext()) ?: "").observe(viewLifecycleOwner) { journals ->
+            journalAdapter.updateJournals(journals)
+        }
+
+        // Observa los journals del ViewModel y guarda la lista completa
+        //journalViewModel.getUserJournals(PreferencesHelper.getUserId(requireContext()) ?: "").observe(viewLifecycleOwner) { journals ->
+         //   journalList = journals
+         //   journalAdapter.updateJournals(journalList) // Actualiza el adaptador con la lista inicial
+       // }
 
         return view
     }
@@ -355,4 +380,18 @@ class MyJournalsFragment : Fragment() {
     private fun showJournalDetails(journalId: String) {
         JournalDetailFragment.newInstance(journalId).show(parentFragmentManager, "JournalDetail")
     }
+
+
+
+
+    private fun syncAllEntries() {
+        journalViewModel.syncAllEntries()
+    }
+
+    private fun isConnectedToInternet(): Boolean {
+        val connectivityManager = context?.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetwork = connectivityManager.activeNetworkInfo
+        return activeNetwork != null && activeNetwork.isConnected
+    }
+
 }

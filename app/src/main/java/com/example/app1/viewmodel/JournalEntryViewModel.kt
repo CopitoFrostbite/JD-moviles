@@ -30,6 +30,8 @@ class JournalEntryViewModel @Inject constructor(
 ) : AndroidViewModel(application) {
 
     private val _createJournalEntryLiveData = MutableLiveData<Response<JournalEntry>>()
+    private val _syncStatus = MutableLiveData<Boolean>()
+    val syncStatus: LiveData<Boolean> get() = _syncStatus
     val createJournalEntryLiveData: LiveData<Response<JournalEntry>> get() = _createJournalEntryLiveData
     // LiveData para listar los journals desde la base de datos local
 
@@ -49,6 +51,12 @@ class JournalEntryViewModel @Inject constructor(
         }
     }
 
+    fun syncDrafts() {
+        viewModelScope.launch {
+            _syncStatus.value = journalRepository.syncDrafts()
+        }
+    }
+
     fun saveDraftJournalEntry(journalEntry: JournalEntry) {
         viewModelScope.launch(Dispatchers.IO) {
             journalRepository.saveDraft(journalEntry)  // Guardar en la base de datos local
@@ -56,9 +64,24 @@ class JournalEntryViewModel @Inject constructor(
     }
 
     // Función para publicar el journal en la API cuando el usuario lo decida
+    //fun publishJournalEntry(journalEntry: JournalEntry) {
+      //  viewModelScope.launch(Dispatchers.IO) {
+        //    val response = journalRepository.registerJournalEntry(journalEntry.toRequest())
+          //  if (response.isSuccessful) {
+                // Actualizar en la BD local para marcar que ya no es borrador
+            //    journalRepository.updateJournalStatus(journalEntry.journalId, isDraft = false)
+              //  _createJournalEntryLiveData.postValue(response)  // Notificar éxito
+            //} else {
+             //   _createJournalEntryLiveData.postValue(response)  // Notificar error
+            //}
+        //}
+    //}
+
     fun publishJournalEntry(journalEntry: JournalEntry) {
         viewModelScope.launch(Dispatchers.IO) {
+            // Convierte el JournalEntry a JournalRequest para la API
             val response = journalRepository.registerJournalEntry(journalEntry.toRequest())
+
             if (response.isSuccessful) {
                 // Actualizar en la BD local para marcar que ya no es borrador
                 journalRepository.updateJournalStatus(journalEntry.journalId, isDraft = false)
@@ -66,6 +89,15 @@ class JournalEntryViewModel @Inject constructor(
             } else {
                 _createJournalEntryLiveData.postValue(response)  // Notificar error
             }
+        }
+    }
+
+    
+
+    fun syncAllEntries() {
+        viewModelScope.launch {
+            val result = journalRepository.syncAllEntries()
+            _syncStatus.value = result
         }
     }
 
@@ -110,6 +142,21 @@ class JournalEntryViewModel @Inject constructor(
             emit(journals)
         }
     }
+
+    // Sincronización automática al guardar una nueva entrada
+    fun syncJournalEntry(journalEntry: JournalEntry) {
+        viewModelScope.launch(Dispatchers.IO) {
+            journalRepository.syncJournalEntry(journalEntry)
+        }
+    }
+
+    // Sincronización manual desde el fragmento
+    fun syncAllJournalEntries(userId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            journalRepository.syncJournalEntriesWithCloud(userId)
+        }
+    }
+
 
     fun scheduleSync() {
         val constraints = Constraints.Builder()

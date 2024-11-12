@@ -124,34 +124,81 @@ class JournalEntryRepository @Inject constructor(
         }
     }
 
-    suspend fun syncData() {
+    // Sincronización automática tras guardar una nueva entrada
+    suspend fun syncJournalEntry(journalEntry: JournalEntry): Response<JournalEntry>? {
+        return if (NetworkUtils.isNetworkAvailable(context)) {
+            val cloudEntry = api.getJournalEntryById(journalEntry.journalId).body()
+
+            val resolvedEntry = resolveConflict(journalEntry, cloudEntry)
+            val response = resolvedEntry?.let { api.registerJournalEntry(it.toRequest()) }
+
+            if (response != null) {
+                if (response.isSuccessful) {
+                    journalDao.updateEntry(resolvedEntry)
+                }
+            }
+            response
+        } else {
+            // Si no hay conexión, guardar como borrador
+            journalDao.insertEntry(journalEntry.apply { isDraft = true })
+            Response.success(journalEntry)
+        }
+    }
+
+    // Sincronización manual completa (Opción 4)
+    suspend fun syncJournalEntriesWithCloud(userId: String) {
         if (NetworkUtils.isNetworkAvailable(context)) {
-            val userId = PreferencesHelper.getUserId(context)
-            if (userId != "") {
-                userId?.let<String, List<JournalEntry>> { journalDao.getAllEntriesByUserId(it) }
-                    ?.forEach {
-                        //api.updateEntry(it.entryId, it)
-                    }
+            val localEntries = journalDao.getAllEntriesByUserId(userId)
+            val cloudEntriesResponse = api.getAllJournalEntries(userId)
+
+            if (cloudEntriesResponse.isSuccessful) {
+                val cloudEntries = cloudEntriesResponse.body() ?: emptyList()
+
+                // Resolver conflictos y actualizar la base de datos
+                cloudEntries.forEach { cloudEntry ->
+                    val localEntry = localEntries.find { it.journalId == cloudEntry.journalId }
+                    val resolvedEntry = resolveConflict(localEntry, cloudEntry)
+                    if (resolvedEntry != null) {
+                        journalDao.insertEntry(resolvedEntry)
+                    } // Actualiza o inserta la entrada resuelta
+                }
             }
         }
     }
 
+    // Resolución de conflictos en base a la fecha de modificación
+    private fun resolveConflict(localEntry: JournalEntry?, cloudEntry: JournalEntry?): JournalEntry? {
+        return when {
+            // Si la entrada local es más reciente, darle prioridad
+            localEntry != null && cloudEntry != null && localEntry.date >= cloudEntry.date -> localEntry
+
+            // Si la entrada en la nube es más reciente, actualizar la local
+            localEntry != null && cloudEntry != null && localEntry.date < cloudEntry.date -> cloudEntry
+
+            // Si solo existe la entrada local, retornar la entrada local
+            localEntry != null -> localEntry
+
+            // Si solo existe la entrada en la nube, retornar la entrada en la nube
+            cloudEntry != null -> cloudEntry
+
+            // Si no hay entradas, retornar null (opcional)
+            else -> null
+        }
+    }
+
+    // Método para actualizar todas las entradas locales desde la nube en segundo plano
     suspend fun syncEditedEntries() {
         if (NetworkUtils.isNetworkAvailable(context)) {
-            try {
-                val userId = PreferencesHelper.getUserId(context)
-                userId?.let {
-                    val editedEntries = journalDao.getEditedEntries(it)
-                    for (entry in editedEntries) {
-                        val response = api.updateJournalEntry(entry.journalId, entry.title, entry.content, entry.date, entry.isEdited)
-                        if (response.isSuccessful) {
-                            entry.isEdited = false // Marcar como sincronizado
-                            journalDao.updateEntry(entry)
-                        }
+            val userId = PreferencesHelper.getUserId(context)
+            userId?.let {
+                val editedEntries = journalDao.getEditedEntries(it)
+                for (entry in editedEntries) {
+                    val response = api.updateJournalEntry(entry.journalId, entry.title, entry.content, entry.date, entry.isEdited)
+                    if (response.isSuccessful) {
+                        entry.isEdited = false // Marcar como sincronizado
+                        journalDao.updateEntry(entry)
                     }
                 }
-            } catch (e: Exception) {
-                Log.e("JournalRepository", "Error syncing edited journal entries", e)
             }
         }
     }
@@ -188,4 +235,87 @@ class JournalEntryRepository @Inject constructor(
         }
         return name
     }
+
+    // Método para sincronizar borradores cuando hay conexión
+   // suspend fun syncDrafts() {
+     //   if (NetworkUtils.isNetworkAvailable(context)) {
+       //     val drafts = journalDao.getDraftEntriesByUserId()  // Método en `journalDao` que retorna los borradores
+
+         //   drafts.forEach { draft ->
+           //     try {
+             //       val response = api.registerJournalEntry(draft.toRequest())
+               //     if (response.isSuccessful) {
+                 //       draft.isDraft = false
+                   //     journalDao.updateEntry(draft)  // Marcar como publicado
+                  //  }
+               // } catch (e: Exception) {
+                 //   Log.e("JournalEntryRepository", "Error al sincronizar borrador: ${draft.journalId}", e)
+              //  }
+          //  }
+      //  }
+    //}
+
+    // Sincronizar borradores manualmente
+    suspend fun syncDrafts(): Boolean {
+        return if (NetworkUtils.isNetworkAvailable(context)) {
+            val drafts = journalDao.getDraftEntriesByUserId()
+            var success = true
+            drafts.forEach { draft ->
+                try {
+                    val response = api.registerJournalEntry(draft.toRequest())
+                    if (response.isSuccessful) {
+                        draft.isDraft = false
+                        journalDao.updateEntry(draft)  // Marcar como sincronizado
+                    } else {
+                        success = false
+                    }
+                } catch (e: Exception) {
+                    Log.e("JournalEntryRepository", "Error al sincronizar borrador: ${draft.journalId}", e)
+                    success = false
+                }
+            }
+            success
+        } else {
+            false
+        }
+    }
+
+    // Método de sincronización general, que llama syncDrafts
+    suspend fun syncData() {
+        syncDrafts()
+        // Agregar otras operaciones de sincronización si es necesario
+    }
+
+    suspend fun syncAllEntries(): Boolean {
+        return if (NetworkUtils.isNetworkAvailable(context)) {
+            // Obtener todas las entradas de la nube
+            val userId = PreferencesHelper.getUserId(context)
+            if (userId != null) {
+                try {
+                    val cloudEntriesResponse = api.getAllJournalEntries(userId)
+                    if (cloudEntriesResponse.isSuccessful) {
+                        val cloudEntries = cloudEntriesResponse.body()
+                        if (cloudEntries != null) {
+                            cloudEntries.forEach { cloudEntry ->
+                                val localEntry = journalDao.getEntryById(cloudEntry.journalId)
+                                val resolvedEntry = resolveConflict(localEntry, cloudEntry)
+                                if (resolvedEntry != null) {
+                                    journalDao.insertEntry(resolvedEntry)
+                                }  // Guardar la entrada resuelta en local
+                            }
+                            return true
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("JournalEntryRepository", "Error al sincronizar las entradas", e)
+                    return false
+                }
+            }
+            false
+        } else {
+            false
+        }
+    }
+
+
 }

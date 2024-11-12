@@ -51,14 +51,14 @@ interface JournalApiService {
     suspend fun getUserById(@Path("userId") userId: String): Response<User>
 
     @PUT("user/{id}")
-    suspend fun updateUser(@Path("id") id: String, @Body user: User): Response<UserResponse>
+    suspend fun updateUser(@Path("id") id: String, @Body user: User): Response<User>
 
     @Multipart
     @PUT("user/{userId}/profile_picture")
     suspend fun updateUserProfileImage(
         @Path("userId") userId: String,
         @Part profilePicture: MultipartBody.Part
-    ): Response<UserResponse>
+    ): Response<User>
 
     // JournalEntry-related endpoints
 

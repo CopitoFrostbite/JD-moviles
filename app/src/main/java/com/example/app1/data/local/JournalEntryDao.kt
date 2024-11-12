@@ -41,8 +41,8 @@ interface JournalEntryDao {
     suspend fun deleteAllEntriesByUserId(userId: String)
 
     // Nuevos métodos
-    @Query("SELECT * FROM journal_entries WHERE userId = :userId AND isDraft = 1")
-    suspend fun getDraftEntriesByUserId(userId: String): List<JournalEntry>
+    @Query("SELECT * FROM journal_entries WHERE  isDraft = 1")
+    suspend fun getDraftEntriesByUserId(): List<JournalEntry>
 
     @Query("SELECT * FROM journal_entries WHERE userId = :userId AND isDraft = 0")
     suspend fun getPublishedEntriesByUserId(userId: String): List<JournalEntry>

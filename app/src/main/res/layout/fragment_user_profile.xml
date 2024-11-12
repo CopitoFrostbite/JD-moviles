@@ -23,7 +23,7 @@
         android:focusable="true"
         android:layout_marginTop="32dp"
         android:layout_marginBottom="24dp"
-        android:src="@drawable/perro"
+        android:src="@drawable/ic_profile_placeholder"
         android:clipToOutline="true" />
 
     <!-- Nombre de usuario -->

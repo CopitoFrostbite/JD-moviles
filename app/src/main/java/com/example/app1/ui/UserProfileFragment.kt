@@ -1,7 +1,8 @@
 package com.example.app1.ui
 
+import android.app.Application
 import android.content.Intent
-import android.content.SharedPreferences
+
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -14,11 +15,12 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.Observer
+import androidx.lifecycle.LiveData
+
+import androidx.lifecycle.liveData
 import com.bumptech.glide.Glide
 import com.example.app1.R
 import com.example.app1.data.model.User
@@ -26,6 +28,8 @@ import com.example.app1.utils.PreferencesHelper
 import com.google.android.material.textfield.TextInputEditText
 import com.example.app1.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.internal.Contexts.getApplication
+import kotlinx.coroutines.Dispatchers
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -45,6 +49,7 @@ class UserProfileFragment : Fragment() {
     private lateinit var lastName: TextInputEditText
     private lateinit var journalCount: TextInputEditText
     private lateinit var btnEditProfile: Button
+
     private val userViewModel: UserViewModel by activityViewModels()
     private var selectedImageUri: Uri? = null
 
@@ -126,18 +131,12 @@ class UserProfileFragment : Fragment() {
 
         userViewModel.updateUserData(updatedUser).observe(viewLifecycleOwner) { response ->
             if (response.isSuccessful) {
-                response.body()?.let { userResponse ->
-                    username.text = Editable.Factory.getInstance().newEditable(userResponse.username)
-                    email.text = Editable.Factory.getInstance().newEditable(userResponse.email)
-                    firstName.text = Editable.Factory.getInstance().newEditable(userResponse.name)
-                    lastName.text = Editable.Factory.getInstance().newEditable(userResponse.lastname)
-                    Glide.with(this).load(userResponse.profilePicture).into(profileImage)
-                }
                 Toast.makeText(requireContext(), "Perfil actualizado correctamente", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(requireContext(), "Error al actualizar el perfil", Toast.LENGTH_SHORT).show()
             }
         }
+
     }
 
     // Método para actualizar solo la imagen del perfil
@@ -166,11 +165,10 @@ class UserProfileFragment : Fragment() {
             // Llamar al ViewModel para actualizar la imagen
             userViewModel.updateProfileImage(userId, avatarPart).observe(viewLifecycleOwner) { response ->
                 if (response.isSuccessful) {
-                    response.body()?.let { userResponse ->
-                        Glide.with(this).load(userResponse.profilePicture).into(profileImage)
-                    }
                     Toast.makeText(requireContext(), "Imagen actualizada correctamente", Toast.LENGTH_SHORT).show()
                 } else {
+                    val errorBody = response.errorBody()?.string() ?: "Sin mensaje de error"
+                    Log.e("UserProfileFragment", "Error al actualizar imagen. Código: ${response.code()}, Mensaje: $errorBody")
                     Toast.makeText(requireContext(), "Error al actualizar imagen", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -197,4 +195,10 @@ class UserProfileFragment : Fragment() {
     companion object {
         private const val REQUEST_IMAGE_PICK = 1
     }
+
+    // Función para obtener el usuario actual desde Room
+
+
+
+
 }

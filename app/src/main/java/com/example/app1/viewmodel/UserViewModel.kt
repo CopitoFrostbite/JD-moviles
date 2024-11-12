@@ -11,7 +11,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.*
 import com.example.app1.data.model.User
 import com.example.app1.data.remote.JournalApiService
+
 import com.example.app1.data.repository.UserRepository
+import com.example.app1.utils.PreferencesHelper
 import com.example.app1.workers.SyncWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -19,14 +21,13 @@ import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.ResponseBody
+
 import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.Response
 import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
+
 
 @HiltViewModel
 class UserViewModel @Inject constructor(
@@ -70,6 +71,8 @@ class UserViewModel @Inject constructor(
         return tempFile
     }
 
+
+
     fun loginUser(email: String, password: String): MutableLiveData<Response<User>?> {
         val result = MutableLiveData<Response<User>?>()
         viewModelScope.launch(Dispatchers.IO) {
@@ -93,21 +96,24 @@ class UserViewModel @Inject constructor(
         return result
     }
 
-    fun updateUserData(updatedUser: User): LiveData<Response<JournalApiService.UserResponse>> {
-        val result = MutableLiveData<Response<JournalApiService.UserResponse>>()
+
+
+    fun updateUserData(updatedUser: User): LiveData<Response<User>> {
+        val result = MutableLiveData<Response<User>>()
+
         viewModelScope.launch(Dispatchers.IO) {
             val response = userRepository.updateUserData(updatedUser)
-            result.postValue(response)
+            result.postValue(response)  // Publicar la respuesta directamente
         }
         return result
     }
 
-    fun updateProfileImage(userId: String, avatarPart: MultipartBody.Part): LiveData<Response<JournalApiService.UserResponse>> {
-        val result = MutableLiveData<Response<JournalApiService.UserResponse>>()
+    fun updateProfileImage(userId: String, avatarPart: MultipartBody.Part): LiveData<Response<User>> {
+        val result = MutableLiveData<Response<User>>()
 
         viewModelScope.launch(Dispatchers.IO) {
             val response = userRepository.updateProfileImage(userId, avatarPart)
-            result.postValue(response)
+            result.postValue(response)  // Publicar la respuesta directamente
         }
         return result
     }
@@ -121,9 +127,17 @@ class UserViewModel @Inject constructor(
         _user.value = user
     }
 
-    fun getCurrentUser(): LiveData<User?> {
-        return userRepository.getCurrentUser()
+    fun getCurrentUser(): LiveData<User?> = liveData(Dispatchers.IO) {
+        val userId = PreferencesHelper.getUserId(getApplication<Application>())
+        val user = if (userId?.isNotEmpty() == true) {
+            userRepository.getUserById(userId)
+        } else {
+            null
+        }
+        emit(user)
     }
+
+
 
     fun scheduleSync() {
         val constraints = Constraints.Builder()
