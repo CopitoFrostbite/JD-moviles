@@ -93,9 +93,14 @@ class MyJournalsFragment : Fragment() {
         // Botón de sincronización manual
 
 
-        view.findViewById<Button>(R.id.fabSync).setOnClickListener {
-            syncAllEntries()  // Llama a la función de sincronización manual
-            Toast.makeText(requireContext(), "Sincronización en proceso...", Toast.LENGTH_SHORT).show()
+        // Botón de sincronización manual que verifica la conexión a internet antes de sincronizar todos los journals
+        view.findViewById<FloatingActionButton>(R.id.fabSync).setOnClickListener {
+            if (isConnectedToInternet()) {
+                syncAllEntries()  // Llama a la función de sincronización manual en el ViewModel
+                Toast.makeText(requireContext(), "Sincronización en proceso...", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(requireContext(), "Conexión a internet no disponible", Toast.LENGTH_SHORT).show()
+            }
         }
 
         // Observa el resultado de la sincronización
@@ -107,16 +112,12 @@ class MyJournalsFragment : Fragment() {
             }
         }
 
-        // Observa y actualiza la lista de entradas de diario
-        journalViewModel.getUserJournals(PreferencesHelper.getUserId(requireContext()) ?: "").observe(viewLifecycleOwner) { journals ->
-            journalAdapter.updateJournals(journals)
-        }
 
-        // Observa los journals del ViewModel y guarda la lista completa
-        //journalViewModel.getUserJournals(PreferencesHelper.getUserId(requireContext()) ?: "").observe(viewLifecycleOwner) { journals ->
-         //   journalList = journals
-         //   journalAdapter.updateJournals(journalList) // Actualiza el adaptador con la lista inicial
-       // }
+         //Observa los journals del ViewModel y guarda la lista completa
+        journalViewModel.getUserJournals(PreferencesHelper.getUserId(requireContext()) ?: "").observe(viewLifecycleOwner) { journals ->
+            journalList = journals
+            journalAdapter.updateJournals(journalList) // Actualiza el adaptador con la lista inicial
+        }
 
         return view
     }

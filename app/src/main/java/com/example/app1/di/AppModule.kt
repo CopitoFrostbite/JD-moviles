@@ -6,6 +6,10 @@ import androidx.room.Room
 import com.example.app1.data.local.*
 import com.example.app1.data.remote.JournalApiService
 import com.example.app1.data.repository.*
+
+import com.example.app1.ui.adapters.LongDateTypeAdapter
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,6 +19,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.Date
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -70,21 +75,23 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideRetrofit(): Retrofit {
+    fun provideRetrofit(gson: Gson): Retrofit {
         val logging = HttpLoggingInterceptor()
         logging.level = HttpLoggingInterceptor.Level.BODY
         val client = OkHttpClient.Builder()
-            .connectTimeout(60, TimeUnit.SECONDS)  // Tiempo de espera para conectar
-            .writeTimeout(60, TimeUnit.SECONDS)    // Tiempo de espera para escribir datos
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .addInterceptor(logging)
             .build()
+
         return Retrofit.Builder()
             .baseUrl("https://apimoviles-yha6.onrender.com/api/")
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))  // Usa Gson personalizado
             .build()
     }
+
 
     @Singleton
     @Provides
@@ -129,4 +136,14 @@ object AppModule {
     fun provideSettingsRepository(api: JournalApiService, settingsDao: SettingsDao): SettingsRepository {
         return SettingsRepository(api, settingsDao)
     }
+
+    @Singleton
+    @Provides
+    fun provideGson(): Gson {
+        return GsonBuilder()
+            .registerTypeAdapter(Long::class.java, LongDateTypeAdapter())  // Adaptador para Long
+            .create()
+    }
+
+
 }

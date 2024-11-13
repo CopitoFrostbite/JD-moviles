@@ -63,20 +63,6 @@ class JournalEntryViewModel @Inject constructor(
         }
     }
 
-    // Función para publicar el journal en la API cuando el usuario lo decida
-    //fun publishJournalEntry(journalEntry: JournalEntry) {
-      //  viewModelScope.launch(Dispatchers.IO) {
-        //    val response = journalRepository.registerJournalEntry(journalEntry.toRequest())
-          //  if (response.isSuccessful) {
-                // Actualizar en la BD local para marcar que ya no es borrador
-            //    journalRepository.updateJournalStatus(journalEntry.journalId, isDraft = false)
-              //  _createJournalEntryLiveData.postValue(response)  // Notificar éxito
-            //} else {
-             //   _createJournalEntryLiveData.postValue(response)  // Notificar error
-            //}
-        //}
-    //}
-
     fun publishJournalEntry(journalEntry: JournalEntry) {
         viewModelScope.launch(Dispatchers.IO) {
             // Convierte el JournalEntry a JournalRequest para la API
@@ -92,7 +78,7 @@ class JournalEntryViewModel @Inject constructor(
         }
     }
 
-    
+
 
     fun syncAllEntries() {
         viewModelScope.launch {
@@ -143,12 +129,7 @@ class JournalEntryViewModel @Inject constructor(
         }
     }
 
-    // Sincronización automática al guardar una nueva entrada
-    fun syncJournalEntry(journalEntry: JournalEntry) {
-        viewModelScope.launch(Dispatchers.IO) {
-            journalRepository.syncJournalEntry(journalEntry)
-        }
-    }
+
 
     // Sincronización manual desde el fragmento
     fun syncAllJournalEntries(userId: String) {

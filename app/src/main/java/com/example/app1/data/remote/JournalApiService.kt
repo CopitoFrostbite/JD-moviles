@@ -80,8 +80,8 @@ interface JournalApiService {
     @GET("journal/")
     suspend fun getJournalEntryById(@Body entryId: String): Response<JournalEntry>
 
-    @GET("journals")
-    suspend fun getAllJournalEntries(@Body userId: String): Response<List<JournalEntry>>
+    @GET("journals/{userId}")
+    suspend fun getAllJournalEntries(@Path("userId") userId: String): Response<List<JournalEntry>>
 
     // Image-related endpoints
     @POST("entries/{entryId}/images")

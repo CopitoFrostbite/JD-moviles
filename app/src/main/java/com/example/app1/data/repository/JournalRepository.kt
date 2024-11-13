@@ -29,6 +29,7 @@ class JournalEntryRepository @Inject constructor(
     private val journalDao: JournalEntryDao,
     private val context: Context
 ) {
+    val userId = PreferencesHelper.getUserId(context)
     suspend fun registerJournalEntry(journalRequest: JournalApiService.JournalRequest): Response<JournalEntry> {
         val journalEntry = journalDao.getEntryById(journalRequest.journalId)
 
@@ -124,26 +125,7 @@ class JournalEntryRepository @Inject constructor(
         }
     }
 
-    // Sincronización automática tras guardar una nueva entrada
-    suspend fun syncJournalEntry(journalEntry: JournalEntry): Response<JournalEntry>? {
-        return if (NetworkUtils.isNetworkAvailable(context)) {
-            val cloudEntry = api.getJournalEntryById(journalEntry.journalId).body()
 
-            val resolvedEntry = resolveConflict(journalEntry, cloudEntry)
-            val response = resolvedEntry?.let { api.registerJournalEntry(it.toRequest()) }
-
-            if (response != null) {
-                if (response.isSuccessful) {
-                    journalDao.updateEntry(resolvedEntry)
-                }
-            }
-            response
-        } else {
-            // Si no hay conexión, guardar como borrador
-            journalDao.insertEntry(journalEntry.apply { isDraft = true })
-            Response.success(journalEntry)
-        }
-    }
 
     // Sincronización manual completa (Opción 4)
     suspend fun syncJournalEntriesWithCloud(userId: String) {
