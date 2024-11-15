@@ -9,16 +9,19 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.app1.R
 import com.example.app1.data.model.JournalEntry
+import com.example.app1.utils.JournalDiffCallback
 
 import java.util.Locale
 
 class JournalAdapter(
     private var journals: List<JournalEntry>,
     private val onPublishDraft: (JournalEntry) -> Unit,
-    private val onJournalClick: (journalId: String) -> Unit
+    private val onJournalClick: (journalId: String) -> Unit,
+    private val onDelete: (journalId: String) -> Unit
 ) : RecyclerView.Adapter<JournalAdapter.JournalViewHolder>() {
 
     private var selectedPosition = -1
@@ -83,15 +86,17 @@ class JournalAdapter(
             // Acción para editar
         }
         holder.btnDelete.setOnClickListener {
-            // Acción para eliminar
+            onDelete(journal.journalId)
         }
     }
 
     override fun getItemCount(): Int = journals.size
 
     fun updateJournals(newJournals: List<JournalEntry>) {
+        val diffCallback = JournalDiffCallback(journals, newJournals)
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
         journals = newJournals
-        notifyDataSetChanged()
+        diffResult.dispatchUpdatesTo(this)
     }
 
     private fun getMoodText(mood: Int): String {

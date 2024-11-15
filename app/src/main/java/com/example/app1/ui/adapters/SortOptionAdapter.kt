@@ -1,10 +1,12 @@
 package com.example.app1.ui.adapters
 
+import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.app1.R
 import com.example.app1.SortOption
@@ -27,10 +29,16 @@ class SortOptionAdapter(
 
         holder.itemView.setOnClickListener {
             val wasSelected = option == selectedOption
+            val previousSelectedPosition = options.indexOf(selectedOption)
+
+            // Cambia la dirección solo si el elemento ya estaba seleccionado
             isAscending = if (wasSelected) !isAscending else true
             selectedOption = option
+
+            // Llama al callback y actualiza solo los elementos específicos
             onOptionSelected(option, isAscending)
-            notifyDataSetChanged() // Actualiza el fondo e íconos
+            notifyItemChanged(previousSelectedPosition) // Actualiza el anterior seleccionado
+            notifyItemChanged(position) // Actualiza el nuevo seleccionado
         }
     }
 
@@ -44,12 +52,17 @@ class SortOptionAdapter(
         fun bind(option: SortOption, isSelected: Boolean, isAscending: Boolean) {
             iconOption.setImageResource(option.iconResId)
             textOptionName.text = option.name
+            textOptionName.setTypeface(null, if (isSelected) Typeface.BOLD else Typeface.NORMAL)
+
             itemView.setBackgroundColor(
-                if (isSelected) itemView.context.getColor(R.color.secondary_text_color)
-                else itemView.context.getColor(android.R.color.transparent)
+                if (isSelected) ContextCompat.getColor(itemView.context, R.color.secondary_text_color)
+                else ContextCompat.getColor(itemView.context, android.R.color.transparent)
             )
+
             iconSortDirection.visibility = if (isSelected) View.VISIBLE else View.GONE
-            iconSortDirection.setImageResource(if (isAscending) R.drawable.ic_arrow_upward else R.drawable.ic_arrow_downward)
+            iconSortDirection.setImageResource(
+                if (isAscending) R.drawable.ic_arrow_upward else R.drawable.ic_arrow_downward
+            )
         }
     }
 }

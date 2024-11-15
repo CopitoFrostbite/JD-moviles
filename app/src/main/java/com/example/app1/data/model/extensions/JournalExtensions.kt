@@ -10,6 +10,7 @@ fun JournalEntry.toRequest(): JournalApiService.JournalRequest {
         content = this.content,
         mood = this.mood,
         date = this.date,
-        isEdited = this.isEdited
+        isEdited = this.isEdited,
+        isDeleted = this.isDeleted
     )
 }

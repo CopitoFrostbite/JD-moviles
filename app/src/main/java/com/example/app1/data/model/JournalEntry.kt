@@ -17,5 +17,6 @@ data class JournalEntry(
     var mood: Int,
     var date: Long = System.currentTimeMillis(),
     var isEdited: Boolean = false,
-    var isDraft: Boolean = true
+    var isDraft: Boolean = true,
+    var isDeleted: Boolean = false
 )

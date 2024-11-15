@@ -16,46 +16,20 @@ interface JournalEntryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(journalEntries: List<JournalEntry>)
 
-    @Query("SELECT * FROM journal_entries WHERE journalId = :journalId")
-    suspend fun getEntryById(journalId: String): JournalEntry?
+    @Query("SELECT * FROM journal_entries WHERE journalId = :journalId AND (:isDraft IS NULL OR isDraft = :isDraft) AND isDeleted = 0")
+    suspend fun getEntryById(journalId: String, isDraft: Boolean? = null): JournalEntry?
 
-    @Query("SELECT * FROM journal_entries WHERE userId = :userId")
+    @Query("SELECT * FROM journal_entries WHERE userId = :userId AND isDeleted = 0")
     suspend fun getAllEntriesByUserId(userId: String): List<JournalEntry>
 
-    @Query("SELECT * FROM journal_entries WHERE userId = :userId")
+    @Query("SELECT * FROM journal_entries WHERE userId = :userId AND isDeleted = 0")
     fun getAllEntriesByUserIdSync(userId: String): LiveData<List<JournalEntry>>
 
-    @Query("SELECT * FROM journal_entries WHERE userId = :userId AND isEdited = 1")
-    suspend fun getEditedEntries(userId: String): List<JournalEntry>
+    @Query("UPDATE journal_entries SET isDeleted = :isDeleted WHERE journalId = :journalId")
+    suspend fun updateJournalDeletionStatus(journalId: String, isDeleted: Boolean)
 
     @Update
     suspend fun updateEntry(journalEntry: JournalEntry)
-
-    @Query("SELECT * FROM journal_entries WHERE journalId = :journalId AND isDraft = 1 LIMIT 1")
-    suspend fun getJournalById(journalId: String): JournalEntry?
-
-    @Query("DELETE FROM journal_entries WHERE journalId = :journalId")
-    suspend fun deleteEntry(journalId: String)
-
-    @Query("DELETE FROM journal_entries WHERE userId = :userId")
-    suspend fun deleteAllEntriesByUserId(userId: String)
-
-    // Nuevos métodos
-    @Query("SELECT * FROM journal_entries WHERE  isDraft = 1")
-    suspend fun getDraftEntriesByUserId(): List<JournalEntry>
-
-    @Query("SELECT * FROM journal_entries WHERE userId = :userId AND isDraft = 0")
-    suspend fun getPublishedEntriesByUserId(userId: String): List<JournalEntry>
-
-    @Query("UPDATE journal_entries SET isDraft = 0 WHERE journalId = :journalId")
-    suspend fun markAsPublished(journalId: String)
-
-    @Query("SELECT * FROM journal_entries WHERE isDraft = 0 AND isEdited = 1")
-    suspend fun getEntriesNeedingSync(): List<JournalEntry>
-
-    // Nuevo método para actualizar solo el estado de borrador
-    @Query("UPDATE journal_entries SET isDraft = :isDraft WHERE journalId = :journalId")
-    suspend fun updateDraftStatus(journalId: String, isDraft: Boolean)
 
 
 }

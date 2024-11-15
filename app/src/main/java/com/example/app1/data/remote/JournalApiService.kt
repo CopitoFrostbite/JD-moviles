@@ -30,7 +30,8 @@ interface JournalApiService {
         val content: String,
         val mood: Int,
         val date: Long,
-        val isEdited: Boolean
+        val isEdited: Boolean,
+        val isDeleted: Boolean
     )
 
     // User-related endpoints
@@ -62,6 +63,7 @@ interface JournalApiService {
 
     // JournalEntry-related endpoints
 
+
     @POST("journal/create")
     suspend fun registerJournalEntry(
         @Body journalRequest: JournalRequest
@@ -74,14 +76,22 @@ interface JournalApiService {
         @Field("title") title: String,
         @Field("content") content: String,
         @Field("date") date: Long,
-        @Field("isEdited") isEdited: Boolean
+        @Field("isDeleted") isDeleted: Boolean
     ): Response<JournalEntry>
 
-    @GET("journal/")
-    suspend fun getJournalEntryById(@Body entryId: String): Response<JournalEntry>
+    @GET("journal/{entryId}")
+    suspend fun getJournalEntryById(@Path("entryId") entryId: String): Response<JournalEntry>
 
     @GET("journals/{userId}")
-    suspend fun getAllJournalEntries(@Path("userId") userId: String): Response<List<JournalEntry>>
+    suspend fun getAllJournalEntries(
+        @Path("userId") userId: String
+    ): Response<List<JournalEntry>>
+
+    @PUT("journal/{entryId}")
+    suspend fun markJournalEntryAsDeleted(
+        @Path("entryId") entryId: String
+    ): Response<JournalEntry>
+
 
     // Image-related endpoints
     @POST("entries/{entryId}/images")

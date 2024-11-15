@@ -29,125 +29,69 @@ class JournalEntryViewModel @Inject constructor(
     application: Application
 ) : AndroidViewModel(application) {
 
-    private val _createJournalEntryLiveData = MutableLiveData<Response<JournalEntry>>()
     private val _syncStatus = MutableLiveData<Boolean>()
-    val syncStatus: LiveData<Boolean> get() = _syncStatus
-    val createJournalEntryLiveData: LiveData<Response<JournalEntry>> get() = _createJournalEntryLiveData
-    // LiveData para listar los journals desde la base de datos local
+    private val _createJournalEntryLiveData = MutableLiveData<Response<JournalEntry>>()
+    private val _deleteStatus = MutableLiveData<Boolean>()
+    val deleteStatus: LiveData<Boolean> get() = _deleteStatus
 
-    fun createJournalEntry(journalRequest: JournalApiService.JournalRequest) {
+    val createJournalEntryLiveData: LiveData<Response<JournalEntry>> get() = _createJournalEntryLiveData
+
+    val syncStatus: LiveData<Boolean> get() = _syncStatus
+
+    private val _publishStatus = MutableLiveData<Response<JournalEntry>>()
+    val publishStatus: LiveData<Response<JournalEntry>> get() = _publishStatus
+
+    // Obtener todas las entradas localmente
+    fun getUserJournals(userId: String): LiveData<List<JournalEntry>> = liveData {
+        emit(journalRepository.getAllJournalEntries(userId))
+    }
+
+    // Obtener una entrada específica localmente
+    fun getJournalEntryById(entryId: String): LiveData<JournalEntry?> = liveData {
+        emit(journalRepository.getJournalEntryById(entryId))
+    }
+
+    // Sincronizar todas las entradas con la nube
+    fun syncAllEntries(userId: String) {
+        viewModelScope.launch {
+            val result = journalRepository.syncAllEntries(userId)
+            _syncStatus.postValue(result)
+        }
+    }
+
+    // Publicar una entrada en la nube
+    // Publicar una entrada de diario
+    fun publishJournalEntry(journalEntry: JournalEntry) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val response = journalRepository.registerJournalEntry(journalRequest)
-                _createJournalEntryLiveData.postValue(response)
+                val response = journalRepository.publishJournalEntry(journalEntry.toRequest())
+                _createJournalEntryLiveData.postValue(response) // Publica el resultado en el LiveData
             } catch (e: Exception) {
-                Log.e("JournalEntryViewModel", "Error creating journal entry", e)
-                val errorResponse = Response.error<JournalEntry>(
-                    500,
-                    "Error creating journal entry".toResponseBody("text/plain".toMediaTypeOrNull())
+                _createJournalEntryLiveData.postValue(
+                    Response.error(500, "Error al publicar entrada".toResponseBody("text/plain".toMediaTypeOrNull()))
                 )
-                _createJournalEntryLiveData.postValue(errorResponse)
             }
         }
     }
 
-    fun syncDrafts() {
-        viewModelScope.launch {
-            _syncStatus.value = journalRepository.syncDrafts()
+    fun markAsDeleted(journalId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                journalRepository.markAsDeleted(journalId)
+                _deleteStatus.postValue(true) // Notifica éxito
+            } catch (e: Exception) {
+                Log.e("JournalEntryViewModel", "Error al marcar como eliminado", e)
+                _deleteStatus.postValue(false) // Notifica error
+            }
         }
     }
+
+
 
     fun saveDraftJournalEntry(journalEntry: JournalEntry) {
         viewModelScope.launch(Dispatchers.IO) {
-            journalRepository.saveDraft(journalEntry)  // Guardar en la base de datos local
+            val success = journalRepository.saveDraft(journalEntry)
+            _syncStatus.postValue(success)
         }
-    }
-
-    fun publishJournalEntry(journalEntry: JournalEntry) {
-        viewModelScope.launch(Dispatchers.IO) {
-            // Convierte el JournalEntry a JournalRequest para la API
-            val response = journalRepository.registerJournalEntry(journalEntry.toRequest())
-
-            if (response.isSuccessful) {
-                // Actualizar en la BD local para marcar que ya no es borrador
-                journalRepository.updateJournalStatus(journalEntry.journalId, isDraft = false)
-                _createJournalEntryLiveData.postValue(response)  // Notificar éxito
-            } else {
-                _createJournalEntryLiveData.postValue(response)  // Notificar error
-            }
-        }
-    }
-
-
-
-    fun syncAllEntries() {
-        viewModelScope.launch {
-            val result = journalRepository.syncAllEntries()
-            _syncStatus.value = result
-        }
-    }
-
-    fun updateJournalEntry(
-        entryId: Int,
-        title: String,
-        content: String,
-        date: Long,
-        isEdited: Boolean,
-        imageUri: Uri?
-    ): LiveData<Response<JournalEntry>> {
-        val result = MutableLiveData<Response<JournalEntry>>()
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-               // val response = journalRepository.updateJournalEntry(entryId, title, content, date, isEdited, imageUri)
-               // result.postValue(response)
-            } catch (e: Exception) {
-                Log.e("JournalEntryViewModel", "Error updating journal entry", e)
-                val errorResponse = Response.error<JournalEntry>(500, ResponseBody.create("text/plain".toMediaTypeOrNull(), "Error updating journal entry"))
-                result.postValue(errorResponse)
-            }
-        }
-        return result
-    }
-
-    fun getJournalEntryById(entryId: String) = liveData(Dispatchers.IO) {
-        val entry = journalRepository.getJournalEntryById(entryId)
-        emit(entry)
-    }
-
-    fun setJournalEntry(entry: JournalEntry) {
-        //_journalEntry.value = entry
-    }
-
-    fun getCurrentJournalEntries(): LiveData<List<JournalEntry>> {
-        return journalRepository.getCurrentJournalEntries()
-    }
-
-    fun getUserJournals(userId: String): LiveData<List<JournalEntry>> {
-        return liveData {
-            val journals = journalRepository.getAllJournalEntries(userId)
-            emit(journals)
-        }
-    }
-
-
-
-    // Sincronización manual desde el fragmento
-    fun syncAllJournalEntries(userId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            journalRepository.syncJournalEntriesWithCloud(userId)
-        }
-    }
-
-
-    fun scheduleSync() {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
-        val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
-            .setConstraints(constraints)
-            .build()
-
-        WorkManager.getInstance(getApplication()).enqueue(syncRequest)
     }
 }
