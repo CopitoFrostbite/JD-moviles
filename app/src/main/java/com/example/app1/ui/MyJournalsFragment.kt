@@ -71,7 +71,27 @@ class MyJournalsFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_my_journals, container, false)
 
         // Configura el RecyclerView y el Adaptador
-        journalAdapter = JournalAdapter(listOf(), { draft -> journalViewModel.publishJournalEntry(draft) }, { journalId -> showJournalDetails(journalId) })
+        journalAdapter = JournalAdapter(
+            journals = listOf(),
+            onPublishDraft = { draft -> journalViewModel.publishJournalEntry(draft) },
+            onJournalClick = { journalId -> showJournalDetails(journalId) },
+            onDelete = { journalId ->
+                // Llama a markAsDeleted y pasa el ID directamente
+                journalViewModel.markAsDeleted(journalId)
+
+                // Observa el resultado de la eliminación
+                journalViewModel.deleteStatus.observe(viewLifecycleOwner) { isDeleted ->
+                    if (isDeleted) {
+                        Toast.makeText(requireContext(), "Entrada eliminada con éxito", Toast.LENGTH_SHORT).show()
+                        // Actualiza la lista eliminando el JournalEntry correspondiente
+                        journalList = journalList.filter { it.journalId != journalId }
+                        journalAdapter.updateJournals(journalList)
+                    } else {
+                        Toast.makeText(requireContext(), "Error al eliminar la entrada", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        )
         val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerView)
 
         recyclerView.layoutManager = LinearLayoutManager(context)
@@ -113,11 +133,14 @@ class MyJournalsFragment : Fragment() {
         }
 
 
+
+
          //Observa los journals del ViewModel y guarda la lista completa
-        journalViewModel.getUserJournals(PreferencesHelper.getUserId(requireContext()) ?: "").observe(viewLifecycleOwner) { journals ->
-            journalList = journals
-            journalAdapter.updateJournals(journalList) // Actualiza el adaptador con la lista inicial
-        }
+        journalViewModel.getUserJournals(PreferencesHelper.getUserId(requireContext()) ?: "")
+            .observe(viewLifecycleOwner) { journals ->
+                journalList = journals
+                journalAdapter.updateJournals(journalList) // Asegúrate de actualizar el adaptador
+            }
 
         return view
     }
@@ -385,8 +408,15 @@ class MyJournalsFragment : Fragment() {
 
 
 
+
+
     private fun syncAllEntries() {
-        journalViewModel.syncAllEntries()
+        val userId = PreferencesHelper.getUserId(requireContext())
+        if (userId.isNullOrEmpty()) {
+            Toast.makeText(requireContext(), "Usuario no encontrado. Por favor, inicia sesión.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        journalViewModel.syncAllEntries(userId)
     }
 
     private fun isConnectedToInternet(): Boolean {

@@ -86,7 +86,7 @@ class JournalAdapter(
             // Acción para editar
         }
         holder.btnDelete.setOnClickListener {
-            onDelete(journal.journalId)
+            onDelete(journal.journalId) //
         }
     }
 
