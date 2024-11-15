@@ -110,9 +110,6 @@ class MyJournalsFragment : Fragment() {
             showSearchBottomSheet()
         }
 
-        // Botón de sincronización manual
-
-
         // Botón de sincronización manual que verifica la conexión a internet antes de sincronizar todos los journals
         view.findViewById<FloatingActionButton>(R.id.fabSync).setOnClickListener {
             if (isConnectedToInternet()) {
@@ -132,9 +129,6 @@ class MyJournalsFragment : Fragment() {
             }
         }
 
-
-
-
          //Observa los journals del ViewModel y guarda la lista completa
         journalViewModel.getUserJournals(PreferencesHelper.getUserId(requireContext()) ?: "")
             .observe(viewLifecycleOwner) { journals ->
@@ -144,9 +138,6 @@ class MyJournalsFragment : Fragment() {
 
         return view
     }
-
-
-
 
     private fun showSortBottomSheet() {
         val bottomSheetView = layoutInflater.inflate(R.layout.bottom_sheet_sort, null)
@@ -195,13 +186,13 @@ class MyJournalsFragment : Fragment() {
     }
 
     private fun setupFilterListeners(view: View) {
-        val draftButtons = listOf(view.findViewById<Button>(R.id.btnDraft), view.findViewById<Button>(R.id.btnNotDraft))
+        val draftButtons = listOf(view.findViewById(R.id.btnDraft), view.findViewById<Button>(R.id.btnNotDraft))
         val moodButtons = listOf(
-            view.findViewById<Button>(R.id.btnHappyMood),
-            view.findViewById<Button>(R.id.btnSadMood),
-            view.findViewById<Button>(R.id.btnAngryMood),
-            view.findViewById<Button>(R.id.btnSurprisedMood),
-            view.findViewById<Button>(R.id.btnFearMood),
+            view.findViewById(R.id.btnHappyMood),
+            view.findViewById(R.id.btnSadMood),
+            view.findViewById(R.id.btnAngryMood),
+            view.findViewById(R.id.btnSurprisedMood),
+            view.findViewById(R.id.btnFearMood),
             view.findViewById<Button>(R.id.btnDiscontentMood)
         )
 
@@ -282,10 +273,6 @@ class MyJournalsFragment : Fragment() {
         // Limpia todos los filtros temporales
         activeFilters.clear()
         tempFilters.clear()
-
-        // Restablece la opacidad y el texto de los botones de filtros
-
-        //view.findViewById<EditText>(R.id.etNameFilter)?.setText("")
     }
 
     private fun toggleFilter(
@@ -348,13 +335,6 @@ class MyJournalsFragment : Fragment() {
     }
 
 
-
-    // Función para ordenar y actualizar el adaptador
-    private fun <T : Comparable<T>> sortBy(selector: (JournalEntry) -> T?) {
-        val sortedList = journalList.sortedBy(selector)
-        journalAdapter.updateJournals(sortedList)
-    }
-
     private fun applySort(option: SortOption, isAscending: Boolean) {
         val sortedList = when (option.name) {
             "Nombre" -> journalList.sortedBy { it.title }
@@ -379,36 +359,13 @@ class MyJournalsFragment : Fragment() {
         fabSortDirection.setImageResource(arrowIcon)
     }
 
-    private fun filterList(query: String) {
-        val filteredList = journalList.filter { journal ->
-            journal.title.contains(query, ignoreCase = true) ||
-                    getMoodText(journal.mood).contains(query, ignoreCase = true)
-        }
-        journalAdapter.updateJournals(filteredList)
-    }
-
 
     // Función para convertir el estado de ánimo a texto
-    private fun getMoodText(mood: Int): String {
-        return when (mood) {
-            1 -> "Triste"
-            2 -> "Ira"
-            3 -> "Sorpresa"
-            4 -> "Miedo"
-            5 -> "Feliz"
-            6 -> "Inconforme"
-            else -> "Desconocido"
-        }
-    }
+
 
     private fun showJournalDetails(journalId: String) {
         JournalDetailFragment.newInstance(journalId).show(parentFragmentManager, "JournalDetail")
     }
-
-
-
-
-
 
     private fun syncAllEntries() {
         val userId = PreferencesHelper.getUserId(requireContext())

@@ -71,8 +71,6 @@ class UserViewModel @Inject constructor(
         return tempFile
     }
 
-
-
     fun loginUser(email: String, password: String): MutableLiveData<Response<User>?> {
         val result = MutableLiveData<Response<User>?>()
         viewModelScope.launch(Dispatchers.IO) {
@@ -95,9 +93,6 @@ class UserViewModel @Inject constructor(
         }
         return result
     }
-
-
-
     fun updateUserData(updatedUser: User): LiveData<Response<User>> {
         val result = MutableLiveData<Response<User>>()
 
@@ -117,18 +112,12 @@ class UserViewModel @Inject constructor(
         }
         return result
     }
-
-    fun getUserById(userId: String) = liveData(Dispatchers.IO) {
-        val user = userRepository.getUserById(userId)
-        emit(user)
-    }
-
     fun setUser(user: User) {
         _user.value = user
     }
 
     fun getCurrentUser(): LiveData<User?> = liveData(Dispatchers.IO) {
-        val userId = PreferencesHelper.getUserId(getApplication<Application>())
+        val userId = PreferencesHelper.getUserId(getApplication())
         val user = if (userId?.isNotEmpty() == true) {
             userRepository.getUserById(userId)
         } else {
@@ -137,17 +126,4 @@ class UserViewModel @Inject constructor(
         emit(user)
     }
 
-
-
-    fun scheduleSync() {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
-        val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
-            .setConstraints(constraints)
-            .build()
-
-        WorkManager.getInstance(getApplication()).enqueue(syncRequest)
-    }
 }

@@ -94,10 +94,4 @@ class LoginFragment : Fragment() {
         })
     }
 
-    private fun navigateToHomeScreen() {
-        // Navegar a la pantalla de inicio u otra pantalla principal de la aplicación
-        // val intent = Intent(requireContext(), HomeActivity::class.java)
-        // startActivity(intent)
-        // requireActivity().finish()
-    }
 }
