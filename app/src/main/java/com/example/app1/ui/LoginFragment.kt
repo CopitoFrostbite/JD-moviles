@@ -2,6 +2,7 @@ package com.example.app1.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Patterns
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,8 +14,11 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import com.example.app1.R
+import com.example.app1.data.model.User
+import com.example.app1.utils.NetworkUtils
 import com.example.app1.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import retrofit2.Response
 
 
 @AndroidEntryPoint
@@ -42,7 +46,11 @@ class LoginFragment : Fragment() {
             val password = passwordEditText.text.toString().trim()
 
             if (validateInputs(email, password)) {
-                performLogin(email, password)
+                if (NetworkUtils.isNetworkAvailable(requireContext())) {
+                    performLogin(email, password)
+                } else {
+                    Toast.makeText(requireContext(), "No hay conexión a Internet.", Toast.LENGTH_SHORT).show()
+                }
             } else {
                 Toast.makeText(requireContext(), "Por favor ingrese un email y contraseña válidos.", Toast.LENGTH_SHORT).show()
             }
@@ -59,7 +67,8 @@ class LoginFragment : Fragment() {
     }
 
     private fun validateInputs(email: String, password: String): Boolean {
-        return email.isNotEmpty() && password.isNotEmpty()
+        val emailPattern = Patterns.EMAIL_ADDRESS
+        return email.isNotEmpty() && emailPattern.matcher(email).matches() && password.isNotEmpty()
     }
 
     private fun observeViewModel() {
@@ -71,8 +80,17 @@ class LoginFragment : Fragment() {
         })
     }
 
+    private fun getErrorMessage(response: Response<User>?): String {
+        return when (response?.code()) {
+            401 -> "Credenciales incorrectas. Por favor, verifica tu email y contraseña."
+            500 -> "Error del servidor. Intenta nuevamente más tarde."
+            503 -> "Servicio no disponible. Revisa tu conexión a Internet."
+            else -> "Error inesperado: ${response?.message()}"
+        }
+    }
+
     private fun performLogin(email: String, password: String) {
-        userViewModel.loginUser(email, password).observe(viewLifecycleOwner, Observer { response ->
+        userViewModel.loginUser(email, password).observe(viewLifecycleOwner) { response ->
             if (response?.isSuccessful == true) {
                 response.body()?.let { user ->
                     userViewModel.setUser(user)
@@ -88,10 +106,11 @@ class LoginFragment : Fragment() {
                 }
             } else {
 
-                val errorMessage = response?.errorBody()?.string() ?: "Error de autenticación: ${response?.message()}"
+                val errorMessage = getErrorMessage(response)
                 Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
+
             }
-        })
+        }
     }
 
 }

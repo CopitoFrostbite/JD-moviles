@@ -1,8 +1,7 @@
 package com.example.app1.ui
 
-import android.app.Application
-import android.content.Intent
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -15,21 +14,16 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.LiveData
-
-import androidx.lifecycle.liveData
 import com.bumptech.glide.Glide
 import com.example.app1.R
 import com.example.app1.data.model.User
+import com.example.app1.utils.NetworkUtils
 import com.example.app1.utils.PreferencesHelper
 import com.google.android.material.textfield.TextInputEditText
 import com.example.app1.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.internal.Contexts.getApplication
-import kotlinx.coroutines.Dispatchers
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -41,14 +35,12 @@ import java.io.FileOutputStream
 class UserProfileFragment : Fragment() {
 
     private lateinit var profileImage: ImageView
-
     private lateinit var username: TextInputEditText
-    private lateinit var password: TextInputEditText
     private lateinit var email: TextInputEditText
     private lateinit var firstName: TextInputEditText
     private lateinit var lastName: TextInputEditText
-    private lateinit var journalCount: TextInputEditText
     private lateinit var btnEditProfile: Button
+    private lateinit var btnUploadImage: Button
 
     private val userViewModel: UserViewModel by activityViewModels()
     private var selectedImageUri: Uri? = null
@@ -56,17 +48,8 @@ class UserProfileFragment : Fragment() {
     private val photoPickerLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        if (uri != null) {
-            selectedImageUri = uri
-            profileImage.setImageURI(uri) // Actualizar la imagen mostrada en la UI
-            Toast.makeText(requireContext(), "Imagen seleccionada", Toast.LENGTH_SHORT).show()
-
-            // Llamar a updateProfileImage para enviar la imagen inmediatamente
-            Log.d("UserProfileFragment", "Imagen seleccionada, llamando a updateProfileImage")
-            updateProfileImage(uri) // Llamada directa a la función para enviar la imagen
-        } else {
-            Toast.makeText(requireContext(), "Selección de imagen cancelada", Toast.LENGTH_SHORT).show()
-        }
+        selectedImageUri = uri
+        profileImage.setImageURI(uri)
     }
 
     override fun onCreateView(
@@ -82,19 +65,29 @@ class UserProfileFragment : Fragment() {
         // Initialize views
         profileImage = view.findViewById(R.id.profile_image)
         username = view.findViewById(R.id.username)
-        password = view.findViewById(R.id.password)
         email = view.findViewById(R.id.email)
         firstName = view.findViewById(R.id.first_name)
         lastName = view.findViewById(R.id.last_name)
-        journalCount = view.findViewById(R.id.journal_count)
         btnEditProfile = view.findViewById(R.id.btn_edit_profile)
+        //btnUploadImage = view.findViewById(R.id.btn_upload_image)
 
         profileImage.setOnClickListener {
             photoPickerLauncher.launch("image/*")
         }
 
-        // Load user data into UI
-        userViewModel.getCurrentUser().observe(viewLifecycleOwner) { user ->
+        btnUploadImage.setOnClickListener {
+            selectedImageUri?.let { updateProfileImage(it) }
+        }
+
+        btnEditProfile.setOnClickListener {
+            updateProfileData()
+        }
+
+        observeViewModel()
+    }
+
+    private fun observeViewModel() {
+        userViewModel.user.observe(viewLifecycleOwner) { user ->
             user?.let {
                 username.text = Editable.Factory.getInstance().newEditable(it.username)
                 email.text = Editable.Factory.getInstance().newEditable(it.email)
@@ -104,101 +97,59 @@ class UserProfileFragment : Fragment() {
             }
         }
 
-        // Set listener for updating profile data
-        btnEditProfile.setOnClickListener {
-            updateProfileData()
+        userViewModel.operationStatus.observe(viewLifecycleOwner) { status ->
+            status?.let {
+                Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
-
-    // Método para actualizar solo los datos del perfil
     private fun updateProfileData() {
-        val userId = PreferencesHelper.getUserId(requireContext()) ?: return
-        if (userId.isBlank()) {
-            Toast.makeText(requireContext(), "Error: ID de usuario no válido", Toast.LENGTH_SHORT).show()
+        if (!NetworkUtils.isNetworkAvailable(requireContext())) {
+            Toast.makeText(requireContext(), "No hay conexión a Internet", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (!isInputValid()) {
+            Toast.makeText(requireContext(), "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
             return
         }
 
         val updatedUser = User(
-            userId = userId,
+            userId = PreferencesHelper.getUserId(requireContext()) ?: "",
             username = username.text.toString(),
             name = firstName.text.toString(),
             lastname = lastName.text.toString(),
             email = email.text.toString(),
-            password = password.text.toString(),
+            password = "",
             profilePicture = userViewModel.user.value?.profilePicture
         )
 
-        userViewModel.updateUserData(updatedUser).observe(viewLifecycleOwner) { response ->
-            if (response.isSuccessful) {
-                Toast.makeText(requireContext(), "Perfil actualizado correctamente", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(requireContext(), "Error al actualizar el perfil", Toast.LENGTH_SHORT).show()
-            }
-        }
-
+        userViewModel.updateUserData(updatedUser)
     }
 
-    // Método para actualizar solo la imagen del perfil
+    private fun isInputValid(): Boolean {
+        return username.text.toString().isNotBlank() &&
+                email.text.toString().isNotBlank() &&
+                firstName.text.toString().isNotBlank() &&
+                lastName.text.toString().isNotBlank()
+    }
+
     private fun updateProfileImage(imageUri: Uri) {
         val userId = PreferencesHelper.getUserId(requireContext()) ?: ""
-        if (userId.isBlank()) {
-            Toast.makeText(requireContext(), "Error: ID de usuario no válido", Toast.LENGTH_SHORT).show()
-            return
+        if (userId.isBlank()) return
+
+        val file = File.createTempFile("temp_image", ".jpg", requireContext().cacheDir)
+        requireContext().contentResolver.openInputStream(imageUri)?.use { inputStream ->
+            FileOutputStream(file).use { outputStream -> inputStream.copyTo(outputStream) }
         }
 
-        try {
-            // Crear un archivo temporal a partir de la Uri
-            val inputStream = requireContext().contentResolver.openInputStream(imageUri)
-            val file = File.createTempFile("temp_image", ".jpg", requireContext().cacheDir)
-            val outputStream = FileOutputStream(file)
-            inputStream.use { input ->
-                outputStream.use { output ->
-                    input?.copyTo(output)
-                }
-            }
+        val avatarPart = MultipartBody.Part.createFormData(
+            "avatar",
+            file.name,
+            file.asRequestBody("image/jpeg".toMediaTypeOrNull())
+        )
 
-            // Crear el RequestBody y MultipartBody.Part para la imagen
-            val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
-            val avatarPart = MultipartBody.Part.createFormData("avatar", file.name, requestFile)
-            Log.d("UserProfileFragment", "Actualizando imagen con avatarPart: ${avatarPart.body.contentType()}")
-            // Llamar al ViewModel para actualizar la imagen
-            userViewModel.updateProfileImage(userId, avatarPart).observe(viewLifecycleOwner) { response ->
-                if (response.isSuccessful) {
-                    Toast.makeText(requireContext(), "Imagen actualizada correctamente", Toast.LENGTH_SHORT).show()
-                } else {
-                    val errorBody = response.errorBody()?.string() ?: "Sin mensaje de error"
-                    Log.e("UserProfileFragment", "Error al actualizar imagen. Código: ${response.code()}, Mensaje: $errorBody")
-                    Toast.makeText(requireContext(), "Error al actualizar imagen", Toast.LENGTH_SHORT).show()
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("UserProfileFragment", "Error al procesar la imagen", e)
-            Toast.makeText(requireContext(), "Error al procesar la imagen", Toast.LENGTH_SHORT).show()
-        }
+        userViewModel.updateProfileImage(userId, avatarPart)
     }
-
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_IMAGE_PICK && resultCode == AppCompatActivity.RESULT_OK) {
-            val imageUri: Uri? = data?.data
-            if (imageUri != null) {
-                // Actualizar la imagen en la vista
-                profileImage.setImageURI(imageUri)
-                // Llamar a updateProfileImage para subir la imagen seleccionada
-                updateProfileImage(imageUri)
-            }
-        }
-    }
-
-    companion object {
-        private const val REQUEST_IMAGE_PICK = 1
-    }
-
-    // Función para obtener el usuario actual desde Room
-
-
-
-
 }

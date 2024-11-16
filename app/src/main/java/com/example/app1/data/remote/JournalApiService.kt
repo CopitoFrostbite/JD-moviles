@@ -61,6 +61,9 @@ interface JournalApiService {
         @Part profilePicture: MultipartBody.Part
     ): Response<User>
 
+    @PUT("user/{userId}/mark_deleted")
+    suspend fun UserDeletedOnCloud(@Path("userId") userId: String): Response<User>
+
     // JournalEntry-related endpoints
 
 

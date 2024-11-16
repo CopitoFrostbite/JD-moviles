@@ -13,5 +13,7 @@ data class Reminder(
     val userId: String,
     var description: String,
     var date: Long,
-    val time: String
+    val time: String,
+    val isEdited: Boolean = false,
+    val isDeleted: Boolean = false
 )

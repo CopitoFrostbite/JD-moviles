@@ -13,5 +13,7 @@ data class Image(
     val journalId: String,
     val filePath: String,
     val description: String? = null,
-    val dateAdded: Long = System.currentTimeMillis()
+    val dateAdded: Long = System.currentTimeMillis(),
+    val isEdited: Boolean = false,
+    val isDeleted: Boolean = false
 )

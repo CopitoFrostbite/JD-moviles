@@ -35,8 +35,10 @@ class UserViewModel @Inject constructor(
     application: Application
 ) : AndroidViewModel(application) {
 
-    private val _user = MutableLiveData<User>()
-    val user: LiveData<User> get() = _user
+    private val _user = MutableLiveData<User?>()
+    val user: MutableLiveData<User?> get() = _user
+    private val _operationStatus = MutableLiveData<String>()
+    val operationStatus: LiveData<String> get() = _operationStatus
 
     fun createUser(
         username: RequestBody,
@@ -124,6 +126,34 @@ class UserViewModel @Inject constructor(
             null
         }
         emit(user)
+    }
+
+    fun logout() {
+        viewModelScope.launch(Dispatchers.IO) {
+            userRepository.logoutUser()
+            _user.postValue(null) // Limpia el usuario actual
+        }
+    }
+    fun createGuestUser() {
+        val guestUser = User(
+            userId = "guest",
+            username = "Guest",
+            name = "Guest",
+            lastname = "User",
+            email = "",
+            password = "",
+            profilePicture = null
+        )
+        viewModelScope.launch(Dispatchers.IO) {
+            userRepository.saveUserToLocal(guestUser)
+            _user.postValue(guestUser)
+        }
+    }
+
+    fun syncData() {
+        viewModelScope.launch(Dispatchers.IO) {
+            userRepository.syncData()
+        }
     }
 
 }

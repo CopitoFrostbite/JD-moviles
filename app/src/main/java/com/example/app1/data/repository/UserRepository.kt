@@ -80,13 +80,14 @@ class UserRepository @Inject constructor(
                             name = userResponse.name,
                             lastname = userResponse.lastname,
                             email = userResponse.email,
-                            password = "",  // No guardes la contraseña en texto plano en una app real
+                            password = "",
                             profilePicture = userResponse.profilePicture
                         )
 
                         userDao.clearUsers() // Clear existing users
                         userDao.insertUser(user)
                         PreferencesHelper.saveUserId(context, user.userId) // Save logged in user's ID
+                        syncData()
 
                         Response.success(user)
                     } else {
@@ -115,6 +116,11 @@ class UserRepository @Inject constructor(
         }
     }
 
+    suspend fun logoutUser() {
+        userDao.clearUsers()
+        PreferencesHelper.clearUserId(context)
+    }
+
 
     suspend fun getUserById(userId: String): User? {
         return try {
@@ -138,20 +144,36 @@ class UserRepository @Inject constructor(
 
     suspend fun syncData() {
         if (NetworkUtils.isNetworkAvailable(context)) {
-            val userId = PreferencesHelper.getUserId(context)
-            if (userId != "") {
-                val localUser = userId?.let { userDao.getUserById(it) }
-                localUser?.let {
-                    // Sync the local user with the server
-                    api.updateUser(it.userId, it)
+            val pendingUsers = userDao.getPendingSyncUsers()
+            pendingUsers.forEach { user ->
+                try {
+                    if (user.isDeleted) {
+                        api.UserDeletedOnCloud(user.userId) // Aquí podría ir un endpoint de eliminación
+                    } else if (user.isEdited) {
+                        api.updateUser(user.userId, user)
+                    }
+                    // Limpia los flags locales
+                    saveUserToLocal(user.copy(isEdited = false, isDeleted = false))
+                } catch (e: Exception) {
+                    Log.e("UserRepository", "Sync failed for user: ${user.userId}", e)
                 }
             }
         }
     }
 
-    fun getCurrentUser(userId: String): User? {
-        return userDao.getUserByIdSync(userId)
+    // Guardar usuario en la DB local
+    suspend fun saveUserToLocal(user: User) {
+
+        userDao.insertUser(user)
+        PreferencesHelper.saveUserId(context, user.userId)
     }
+
+    // Obtener el único usuario de la DB local
+    suspend fun getLocalUser(): User? {
+        return userDao.getSingleUserSync()
+    }
+
+
     suspend fun updateUserData(user: User): Response<User> {
         return if (NetworkUtils.isNetworkAvailable(context)) {
             try {
@@ -204,18 +226,6 @@ class UserRepository @Inject constructor(
         } else {
             Response.error(503, "No hay conexión de red".toResponseBody("text/plain".toMediaTypeOrNull()))
         }
-    }
-
-    private fun uriToFile(uri: Uri): File {
-        val contentResolver = context.contentResolver
-        val fileName = getFileName(uri)
-        val tempFile = File(context.cacheDir, fileName)
-        contentResolver.openInputStream(uri)?.use { inputStream ->
-            FileOutputStream(tempFile).use { outputStream ->
-                inputStream.copyTo(outputStream)
-            }
-        }
-        return tempFile
     }
 
     private fun getFileName(uri: Uri): String {

@@ -11,5 +11,8 @@ data class User(
     var lastname: String,
     var email: String,
     var password: String,
-    var profilePicture: String? = null
+    var profilePicture: String? = null,
+    val isEdited: Boolean = false,
+    val isDeleted: Boolean = false,
+    val updatedAt: Long = System.currentTimeMillis()
 )

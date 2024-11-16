@@ -7,9 +7,12 @@ import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import com.example.app1.R
 import com.example.app1.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class LoadingActivity : AppCompatActivity() {
@@ -23,19 +26,18 @@ class LoadingActivity : AppCompatActivity() {
         val welcomeTextView: TextView = findViewById(R.id.welcomeTextView)
 
         // Observa los datos del usuario
-        userViewModel.getCurrentUser().observe(this, Observer { user ->
-            if (user != null) {
-                // Actualiza el TextView con el nombre del usuario
-                welcomeTextView.text = getString(R.string.welcome_user, user.username)
-            } else {
-                welcomeTextView.text = getString(R.string.welcome_guest)
+        userViewModel.getCurrentUser().observe(this) { user ->
+            welcomeTextView.text = when {
+                user != null -> getString(R.string.welcome_user, user.username)
+                else -> getString(R.string.welcome_guest)
             }
-        })
+        }
 
         // Simula una carga de datos
-        Handler().postDelayed({
-            startActivity(Intent(this, Home::class.java))
+        lifecycleScope.launch {
+            delay(3000)
+            startActivity(Intent(this@LoadingActivity, Home::class.java))
             finish()
-        }, 3000)
+        }
     }
 }

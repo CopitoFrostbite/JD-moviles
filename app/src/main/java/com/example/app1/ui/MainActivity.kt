@@ -23,7 +23,9 @@ class MainActivity : AppCompatActivity() {
         userViewModel.getCurrentUser().observe(this, Observer { user ->
             if (user != null) {
                 // Usuario encontrado, iniciar sesión automáticamente y transicionar a NewJournal
-                startActivity(Intent(this, LoadingActivity::class.java))
+                startActivity(Intent(this, LoadingActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+                })
                 finish()
             } else {
                 // No hay usuario, mostrar LoginFragment
