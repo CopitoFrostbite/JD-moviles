@@ -62,7 +62,7 @@ interface JournalApiService {
     ): Response<User>
 
     @PUT("user/{userId}/mark_deleted")
-    suspend fun UserDeletedOnCloud(@Path("userId") userId: String): Response<User>
+    suspend fun userDeletedOnCloud(@Path("userId") userId: String): Response<User>
 
     // JournalEntry-related endpoints
 
@@ -100,8 +100,28 @@ interface JournalApiService {
     @POST("entries/{entryId}/images")
     suspend fun addImageToEntry(@Path("entryId") entryId: String, @Body image: Image): Response<Image>
 
-    @GET("entries/{entryId}/images")
-    suspend fun getImagesByEntryId(@Path("entryId") entryId: String): Response<List<Image>>
+    @GET("image/{journalId}")
+    suspend fun getImagesByEntryId(
+        @Path("journalId") journalId: String
+    ): Response<List<Image>>
+
+    @PUT("image/{imageId}/delete")
+    suspend fun markImageAsDeleted(
+        @Path("imageId") imageId: String
+    ): Response<Image>
+
+    @DELETE("image/{imageId}")
+    suspend fun deleteImage(
+        @Path("imageId") imageId: String
+    ): Response<Void>
+
+    @Multipart
+    @POST("images/add")
+    suspend fun addImagesToEntry(
+        @Part("journalId") journalId: RequestBody,
+        @Part images: List<MultipartBody.Part>,
+        @Part("descriptions") descriptions: List<RequestBody?>? = null
+    ): Response<List<Image>>
 
     // Reminder-related endpoints
     @POST("reminders")

@@ -121,8 +121,12 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideImageRepository(api: JournalApiService, imageDao: ImageDao): ImageRepository {
-        return ImageRepository(api, imageDao)
+    fun provideImageRepository(
+        api: JournalApiService,
+        imageDao: ImageDao,
+        @ApplicationContext context: Context
+    ): ImageRepository {
+        return ImageRepository(api, imageDao, context)
     }
 
     @Singleton

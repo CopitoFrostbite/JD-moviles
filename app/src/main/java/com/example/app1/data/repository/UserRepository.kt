@@ -148,7 +148,7 @@ class UserRepository @Inject constructor(
             pendingUsers.forEach { user ->
                 try {
                     if (user.isDeleted) {
-                        api.UserDeletedOnCloud(user.userId) // Aquí podría ir un endpoint de eliminación
+                        api.userDeletedOnCloud(user.userId) // Aquí podría ir un endpoint de eliminación
                     } else if (user.isEdited) {
                         api.updateUser(user.userId, user)
                     }
@@ -177,54 +177,64 @@ class UserRepository @Inject constructor(
     suspend fun updateUserData(user: User): Response<User> {
         return if (NetworkUtils.isNetworkAvailable(context)) {
             try {
+                // Actualizar en la nube
                 val response = api.updateUser(user.userId, user)
+                Log.d("updateUserData", "API Response: $response")
                 if (response.isSuccessful) {
                     response.body()?.let { userResponse ->
-                        val updatedUser = User(
-                            userId = userResponse.userId,
-                            username = userResponse.username,
-                            name = userResponse.name,
-                            lastname = userResponse.lastname,
-                            email = userResponse.email,
-                            password = "", // La contraseña no debe almacenarse en texto plano
-                            profilePicture = userResponse.profilePicture
-                        )
-                        userDao.insertUser(updatedUser)
+                        Log.d("updateUserData", "User data from API: $userResponse")
+                        val updatedUser = userResponse.copy(isEdited = false)
+                        userDao.updateUser(updatedUser)
+                        Log.d("updateUserData", "Updated user saved in Room: $updatedUser")
                     }
+                } else {
+                    Log.e("updateUserData", "API Error: ${response.errorBody()?.string()}")
                 }
                 response
             } catch (e: Exception) {
+                Log.e("updateUserData", "Exception: ${e.message}", e)
                 Response.error(500, "Error al actualizar datos".toResponseBody("text/plain".toMediaTypeOrNull()))
             }
         } else {
-            Response.error(503, "No hay conexión de red".toResponseBody("text/plain".toMediaTypeOrNull()))
+            // Sin conexión: actualizar localmente y marcar como `isEdited`
+            Log.w("updateUserData", "No hay conexión de red, actualizando localmente")
+            val editedUser = user.copy(isEdited = true)
+            userDao.updateUser(editedUser)
+            Log.d("updateUserData", "Updated user locally: $editedUser")
+            Response.success(editedUser)
         }
     }
 
     suspend fun updateProfileImage(userId: String, avatar: MultipartBody.Part): Response<User> {
         return if (NetworkUtils.isNetworkAvailable(context)) {
             try {
+                // Actualizar en la nube
                 val response = api.updateUserProfileImage(userId, avatar)
                 if (response.isSuccessful) {
                     response.body()?.let { userResponse ->
-                        val updatedUser = User(
-                            userId = userResponse.userId,
-                            username = userResponse.username,
-                            name = userResponse.name,
-                            lastname = userResponse.lastname,
-                            email = userResponse.email,
-                            password = "",
-                            profilePicture = userResponse.profilePicture
-                        )
-                        userDao.insertUser(updatedUser)
+                        val updatedUser = userResponse.copy(isEdited = false)
+                        userDao.updateUser(updatedUser)
+                        Log.d("updateProfileImage", "Updated user saved in Room: $updatedUser")
                     }
                 }
                 response
             } catch (e: Exception) {
+                Log.e("updateProfileImage", "Exception: ${e.message}", e)
                 Response.error(500, "Error al actualizar imagen".toResponseBody("text/plain".toMediaTypeOrNull()))
             }
         } else {
-            Response.error(503, "No hay conexión de red".toResponseBody("text/plain".toMediaTypeOrNull()))
+            // Sin conexión: actualizar localmente y marcar como `isEdited`
+            Log.w("updateProfileImage", "No hay conexión de red, actualizando localmente")
+            val user = userDao.getUserById(userId)
+            if (user != null) {
+                val editedUser = user.copy(isEdited = true, profilePicture = avatar.toString())
+                userDao.updateUser(editedUser)
+                Log.d("updateProfileImage", "Updated user locally: $editedUser")
+                Response.success(editedUser)
+            } else {
+                Log.e("updateProfileImage", "User not found in local database")
+                Response.error(404, "Usuario no encontrado en la base de datos local".toResponseBody("text/plain".toMediaTypeOrNull()))
+            }
         }
     }
 

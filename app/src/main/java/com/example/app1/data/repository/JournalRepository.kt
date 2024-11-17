@@ -77,52 +77,14 @@ class JournalEntryRepository @Inject constructor(
         return journalDao.getAllEntriesByUserId(userId).filter { !it.isDeleted }
     }
 
-    /*suspend fun getAllJournalEntries(userId: String): List<JournalEntry> {
-        return try {
-            if (NetworkUtils.isNetworkAvailable(context)) {
-                val response = api.getAllJournalEntries(userId)
-                if (response.isSuccessful) {
-                    val cloudEntries = response.body()?.filter { !it.isDeleted } ?: emptyList()
-                    journalDao.insertAll(cloudEntries) // Sincroniza los datos en la base de datos local
-                    cloudEntries
-                } else {
-                    journalDao.getAllEntriesByUserId(userId).filter { !it.isDeleted }
-                }
-            } else {
-                journalDao.getAllEntriesByUserId(userId).filter { !it.isDeleted }
-            }
-        } catch (e: Exception) {
-            Log.e("JournalEntryRepository", "Error al obtener entradas de diario", e)
-            journalDao.getAllEntriesByUserId(userId).filter { !it.isDeleted }
-        }
-    }*/
+
 
     // Obtener una entrada de diario específica localmente
     suspend fun getJournalEntryById(journalId: String): JournalEntry? {
         return journalDao.getEntryById(journalId)?.takeIf { !it.isDeleted }
     }
 
-    /*suspend fun getJournalEntryById(journalId: String): JournalEntry? {
-        return try {
-            if (NetworkUtils.isNetworkAvailable(context)) {
-                val response = api.getJournalEntryById(journalId)
-                if (response.isSuccessful) {
-                    val journalEntry = response.body()
-                    if (journalEntry != null) {
-                        journalDao.insertEntry(journalEntry) // Actualiza la base de datos local
-                    }
-                    journalEntry
-                } else {
-                    journalDao.getEntryById(journalId)
-                }
-            } else {
-                journalDao.getEntryById(journalId)
-            }
-        } catch (e: Exception) {
-            Log.e("JournalEntryRepository", "Error al obtener entrada de diario por ID", e)
-            journalDao.getEntryById(journalId)
-        }
-    }*/
+
 
     // Sincronizar todas las entradas con la nube
     suspend fun syncAllEntries(userId: String): Boolean {

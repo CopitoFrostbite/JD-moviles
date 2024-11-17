@@ -125,6 +125,7 @@ class UserViewModel @Inject constructor(
         } else {
             null
         }
+        _user.postValue(user)
         emit(user)
     }
 

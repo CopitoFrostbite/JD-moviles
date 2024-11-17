@@ -10,7 +10,7 @@ data class User(
     var name: String,
     var lastname: String,
     var email: String,
-    var password: String,
+    var password: String? = null,
     var profilePicture: String? = null,
     val isEdited: Boolean = false,
     val isDeleted: Boolean = false,

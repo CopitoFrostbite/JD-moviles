@@ -69,7 +69,7 @@ class UserProfileFragment : Fragment() {
         firstName = view.findViewById(R.id.first_name)
         lastName = view.findViewById(R.id.last_name)
         btnEditProfile = view.findViewById(R.id.btn_edit_profile)
-        //btnUploadImage = view.findViewById(R.id.btn_upload_image)
+        btnUploadImage = view.findViewById(R.id.btn_upload_image)
 
         profileImage.setOnClickListener {
             photoPickerLauncher.launch("image/*")
@@ -89,10 +89,11 @@ class UserProfileFragment : Fragment() {
     private fun observeViewModel() {
         userViewModel.user.observe(viewLifecycleOwner) { user ->
             user?.let {
-                username.text = Editable.Factory.getInstance().newEditable(it.username)
-                email.text = Editable.Factory.getInstance().newEditable(it.email)
-                firstName.text = Editable.Factory.getInstance().newEditable(it.name)
-                lastName.text = Editable.Factory.getInstance().newEditable(it.lastname)
+                username.setText(it.username)
+                email.setText(it.email)
+                firstName.setText(it.name)
+                lastName.setText(it.lastname)
+                //journalCount.setText("Número de diarios: ${it.journalCount ?: 0}")
                 Glide.with(this).load(it.profilePicture).into(profileImage)
             }
         }
@@ -105,10 +106,7 @@ class UserProfileFragment : Fragment() {
     }
 
     private fun updateProfileData() {
-        if (!NetworkUtils.isNetworkAvailable(requireContext())) {
-            Toast.makeText(requireContext(), "No hay conexión a Internet", Toast.LENGTH_SHORT).show()
-            return
-        }
+
 
         if (!isInputValid()) {
             Toast.makeText(requireContext(), "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
