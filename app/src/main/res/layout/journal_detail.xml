@@ -56,6 +56,13 @@
         android:textStyle="italic"
         android:textColor="@color/accent_color" />
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
     <!-- Botón de Cerrar -->
     <Button
         android:id="@+id/btnClose"

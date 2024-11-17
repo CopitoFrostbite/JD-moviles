@@ -47,8 +47,12 @@ class ImageRepository @Inject constructor(
     }
 
     // Obtener imágenes de una entrada de journal desde Room
-    fun getImagesByEntryId(entryId: String): LiveData<List<Image>> {
-        return imageDao.getImagesByJournalId(entryId)
+    suspend fun addImages(images: List<Image>) {
+        imageDao.insertImages(images)
+    }
+
+    suspend fun getImagesByJournalId(journalId: String): LiveData<List<Image>> {
+        return imageDao.getImagesByJournalId(journalId)
     }
 
     // Obtener imágenes desde la API
@@ -81,29 +85,24 @@ class ImageRepository @Inject constructor(
     }
 
     // Sincronizar imágenes pendientes
-    suspend fun syncImages() {
-        if (!NetworkUtils.isNetworkAvailable(context)) {
-            Log.w("ImageRepository", "No hay conexión de red. Sincronización pospuesta.")
-            return
-        }
+    suspend fun syncImages(journalIds: List<String>? = null) {
+        if (!NetworkUtils.isNetworkAvailable(context)) return
 
-        val pendingImages = getPendingSyncImages()
+        val pendingImages = journalIds?.let { ids ->
+            imageDao.getPendingSyncImages().filter { it.journalId in ids }
+        } ?: imageDao.getPendingSyncImages()
+
         pendingImages.forEach { image ->
             try {
                 if (image.isDeleted) {
-                    // Eliminar imagen en la nube
                     val deleteResponse = api.deleteImage(image.imageId)
                     if (deleteResponse.isSuccessful) {
-                        imageDao.deleteImageById(image.imageId) // Eliminar físicamente localmente
-                        Log.d("ImageRepository", "Imagen eliminada de la nube y local: ${image.imageId}")
+                        imageDao.deleteImageById(image.imageId)
                     }
                 } else if (image.isEdited) {
-                    // Subir o actualizar imagen en la nube
-                    val updateResponse = api.addImageToEntry(image.journalId, image)
-                    if (updateResponse.isSuccessful) {
-                        val syncedImage = image.copy(isEdited = false)
-                        imageDao.insertImage(syncedImage) // Actualizar localmente
-                        Log.d("ImageRepository", "Imagen sincronizada: ${image.imageId}")
+                    val response = api.addImageToEntry(image.journalId, image)
+                    if (response.isSuccessful) {
+                        imageDao.insertImage(image.copy(isEdited = false))
                     }
                 }
             } catch (e: Exception) {

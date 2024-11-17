@@ -60,6 +60,7 @@ dependencies {
     implementation("com.google.ar.sceneform:filament-android:1.17.1")
     implementation("com.android.car.ui:car-ui-lib:2.1.0")
     implementation("com.google.android.material:material:1.12.0")
+    implementation("androidx.benchmark:benchmark-common:1.3.3")
 
 
     kapt("androidx.room:room-compiler:2.6.1")

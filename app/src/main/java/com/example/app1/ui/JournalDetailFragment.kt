@@ -7,11 +7,14 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
 import com.example.app1.R
 import com.example.app1.data.model.JournalEntry
+import com.example.app1.utils.UiState
 import com.example.app1.viewmodel.JournalEntryViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.text.SimpleDateFormat
@@ -33,7 +36,6 @@ class JournalDetailFragment : DialogFragment() {
         }
     }
 
-
     override fun onStart() {
         super.onStart()
         dialog?.window?.setLayout(
@@ -41,8 +43,6 @@ class JournalDetailFragment : DialogFragment() {
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
     }
-
-
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(
@@ -54,9 +54,10 @@ class JournalDetailFragment : DialogFragment() {
         // Recuperar el ID del journal desde los argumentos
         arguments?.getString("journalId")?.let {
             journalId = it
-            loadJournalDetails(journalId)
+            observeJournalDetails(journalId)
         }
 
+        // Configurar botón de cerrar con animación
         view.findViewById<Button>(R.id.btnClose).setOnTouchListener { v, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
@@ -68,22 +69,37 @@ class JournalDetailFragment : DialogFragment() {
                 }
             }
             false
-
         }
 
         return view
     }
 
-    private fun loadJournalDetails(journalId: String) {
-        // Observa el JournalEntry desde el ViewModel
-        journalViewModel.getJournalEntryById(journalId).observe(viewLifecycleOwner) { journal ->
-            journal?.let {
-                // Muestra los detalles en los TextViews
-                view?.findViewById<TextView>(R.id.tvJournalTitle)?.text = it.title
-                view?.findViewById<TextView>(R.id.tvJournalDate)?.text = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(it.date)
-                view?.findViewById<TextView>(R.id.tvJournalContent)?.text = it.content
-                view?.findViewById<TextView>(R.id.tvJournalMood)?.text = getMoodText(it.mood)
+    private fun observeJournalDetails(journalId: String) {
+        // Observa el UiState del JournalEntry en el ViewModel
+        journalViewModel.getJournalEntryById(journalId).observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is UiState.Loading -> {
+                    showLoading(true) // Mostrar indicador de carga
+                }
+                is UiState.Success -> {
+                    showLoading(false) // Ocultar indicador de carga
+                    displayJournalDetails(state.data) // Mostrar los detalles del journal
+                }
+                is UiState.Error -> {
+                    showLoading(false) // Ocultar indicador de carga
+                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                }
             }
+        }
+    }
+
+    private fun displayJournalDetails(journal: JournalEntry?) {
+        journal?.let {
+            // Muestra los detalles en los TextViews
+            view?.findViewById<TextView>(R.id.tvJournalTitle)?.text = it.title
+            view?.findViewById<TextView>(R.id.tvJournalDate)?.text = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(it.date)
+            view?.findViewById<TextView>(R.id.tvJournalContent)?.text = it.content
+            view?.findViewById<TextView>(R.id.tvJournalMood)?.text = getMoodText(it.mood)
         }
     }
 
@@ -97,5 +113,10 @@ class JournalDetailFragment : DialogFragment() {
             6 -> "Inconforme"
             else -> "Desconocido"
         }
+    }
+
+    private fun showLoading(isLoading: Boolean) {
+        val progressBar = view?.findViewById<ProgressBar>(R.id.progressBar)
+        progressBar?.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 }

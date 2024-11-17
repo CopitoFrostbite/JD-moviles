@@ -10,6 +10,7 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.example.app1.data.model.Image
 import com.example.app1.data.repository.ImageRepository
+import com.example.app1.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -24,74 +25,57 @@ class ImageViewModel @Inject constructor(
     application: Application
 ) : AndroidViewModel(application) {
 
-    // LiveData para monitorear el estado de sincronización
-    private val _syncStatus = MutableLiveData<Boolean>()
-    val syncStatus: LiveData<Boolean> get() = _syncStatus
+    private val _imageUiState = MutableLiveData<UiState<List<Image>>>()
+    val imageUiState: LiveData<UiState<List<Image>>> get() = _imageUiState
 
-    // LiveData para el estado de creación/añadido de imágenes
-    private val _addImageLiveData = MutableLiveData<Response<Image>>()
-    val addImageLiveData: LiveData<Response<Image>> get() = _addImageLiveData
+    private val _addImageUiState = MutableLiveData<UiState<Image>>()
+    val addImageUiState: LiveData<UiState<Image>> get() = _addImageUiState
 
-    // LiveData para el estado de eliminación
-    private val _deleteStatus = MutableLiveData<Boolean>()
-    val deleteStatus: LiveData<Boolean> get() = _deleteStatus
+    private val _syncUiState = MutableLiveData<UiState<Unit>>()
+    val syncUiState: LiveData<UiState<Unit>> get() = _syncUiState
 
-    // Obtener imágenes asociadas a una entrada de journal desde Room
-    fun getImagesByEntryId(entryId: String): LiveData<List<Image>> {
-        return imageRepository.getImagesByEntryId(entryId)
+    // Obtener imágenes asociadas a un journal
+    fun getImagesByJournalId(journalId: String) {
+        _imageUiState.postValue(UiState.Loading)
+        viewModelScope.launch {
+            try {
+                val images = imageRepository.getImagesByJournalId(journalId)
+                _imageUiState.postValue(UiState.Success(images.value ?: emptyList()))
+            } catch (e: Exception) {
+                _imageUiState.postValue(UiState.Error("Error al cargar imágenes", e))
+            }
+        }
     }
 
-    // Añadir una imagen a una entrada de journal
+    // Añadir una imagen a un journal
     fun addImageToEntry(entryId: String, image: Image) {
-        viewModelScope.launch(Dispatchers.IO) {
+        _addImageUiState.postValue(UiState.Loading)
+        viewModelScope.launch {
             try {
                 val response = imageRepository.addImageToEntry(entryId, image)
-                _addImageLiveData.postValue(response) // Publicar el resultado en el LiveData
+                if (response.isSuccessful) {
+                    response.body()?.let {
+                        _addImageUiState.postValue(UiState.Success(it))
+                    } ?: _addImageUiState.postValue(UiState.Error("Respuesta vacía del servidor"))
+                } else {
+                    _addImageUiState.postValue(UiState.Error("Error al añadir imagen: ${response.code()}"))
+                }
             } catch (e: Exception) {
-                _addImageLiveData.postValue(
-                    Response.error(500, "Error al añadir imagen".toResponseBody("text/plain".toMediaTypeOrNull()))
-                )
-                Log.e("ImageViewModel", "Error al añadir imagen", e)
+                _addImageUiState.postValue(UiState.Error("Error al añadir imagen", e))
             }
         }
     }
 
-    // Marcar una imagen como eliminada (delete lógico)
-    fun markImageAsDeleted(imageId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+    // Sincronizar imágenes de journals específicos
+    fun syncImagesWithJournals(journalIds: List<String>) {
+        _syncUiState.postValue(UiState.Loading)
+        viewModelScope.launch {
             try {
-                imageRepository.markImageAsDeleted(imageId)
-                _deleteStatus.postValue(true) // Notifica éxito
+                imageRepository.syncImages(journalIds)
+                _syncUiState.postValue(UiState.Success(Unit))
             } catch (e: Exception) {
-                Log.e("ImageViewModel", "Error al marcar imagen como eliminada", e)
-                _deleteStatus.postValue(false) // Notifica error
+                _syncUiState.postValue(UiState.Error("Error al sincronizar imágenes", e))
             }
-        }
-    }
-
-    // Sincronizar imágenes pendientes con la nube
-    fun syncImages() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                imageRepository.syncImages()
-                _syncStatus.postValue(true) // Sincronización exitosa
-            } catch (e: Exception) {
-                Log.e("ImageViewModel", "Error al sincronizar imágenes", e)
-                _syncStatus.postValue(false) // Sincronización fallida
-            }
-        }
-    }
-
-    // Obtener imágenes desde la nube
-    fun fetchImagesFromApi(entryId: String): LiveData<Response<List<Image>>> = liveData(Dispatchers.IO) {
-        try {
-            val response = imageRepository.getImagesByEntryIdFromApi(entryId)
-            emit(response)
-        } catch (e: Exception) {
-            Log.e("ImageViewModel", "Error al obtener imágenes desde la API", e)
-            emit(
-                Response.error(500, "Error al obtener imágenes desde la API".toResponseBody("text/plain".toMediaTypeOrNull()))
-            )
         }
     }
 }

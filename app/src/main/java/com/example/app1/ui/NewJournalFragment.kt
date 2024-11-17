@@ -29,6 +29,7 @@ import com.example.app1.R
 import com.example.app1.data.model.JournalEntry
 import com.example.app1.ui.adapters.ImagesAdapter
 import com.example.app1.utils.PreferencesHelper
+import com.example.app1.utils.UiState
 import com.example.app1.viewmodel.JournalEntryViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.UUID
@@ -144,13 +145,33 @@ class NewJournalFragment : Fragment() {
     }
 
     private fun setupObservers() {
-        journalEntryViewModel.createJournalEntryLiveData.observe(viewLifecycleOwner) { response ->
-            val message = if (response.isSuccessful) {
-                "Borrador publicado con éxito"
-            } else {
-                "Error al publicar borrador: ${response.message()}"
+        journalEntryViewModel.publishUiState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is UiState.Loading -> {
+                    Toast.makeText(requireContext(), "Publicando journal...", Toast.LENGTH_SHORT).show()
+                }
+                is UiState.Success -> {
+                    Toast.makeText(requireContext(), "Journal publicado con éxito", Toast.LENGTH_SHORT).show()
+                    navigateToMyJournals()
+                }
+                is UiState.Error -> {
+                    Toast.makeText(requireContext(), "Error al publicar journal: ${state.message}", Toast.LENGTH_SHORT).show()
+                }
             }
-            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        }
+
+        journalEntryViewModel.draftUiState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is UiState.Loading -> {
+                    Toast.makeText(requireContext(), "Guardando borrador...", Toast.LENGTH_SHORT).show()
+                }
+                is UiState.Success -> {
+                    Toast.makeText(requireContext(), "Borrador guardado", Toast.LENGTH_SHORT).show()
+                }
+                is UiState.Error -> {
+                    Toast.makeText(requireContext(), "Error al guardar borrador: ${state.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
