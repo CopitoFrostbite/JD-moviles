@@ -15,14 +15,13 @@ import androidx.room.Index
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index(value = ["journalId"])] // Índice para mejorar las consultas relacionadas con journalId
+    indices = [Index(value = ["journalId"])]
 )
 data class Image(
     @PrimaryKey val imageId: String,
     val journalId: String,
     val filePath: String,
     val cloudUrl: String? = null,
-    val description: String? = null,
     val dateAdded: Long = System.currentTimeMillis(),
     val isEdited: Boolean = false,
     val isDeleted: Boolean = false,

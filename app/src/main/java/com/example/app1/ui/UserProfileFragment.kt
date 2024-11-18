@@ -93,8 +93,7 @@ class UserProfileFragment : Fragment() {
                 email.setText(it.email)
                 firstName.setText(it.name)
                 lastName.setText(it.lastname)
-                //journalCount.setText("Número de diarios: ${it.journalCount ?: 0}")
-                Glide.with(this).load(it.profilePicture).into(profileImage)
+                loadProfileImage(it)
             }
         }
 
@@ -106,8 +105,6 @@ class UserProfileFragment : Fragment() {
     }
 
     private fun updateProfileData() {
-
-
         if (!isInputValid()) {
             Toast.makeText(requireContext(), "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
             return
@@ -149,5 +146,24 @@ class UserProfileFragment : Fragment() {
         )
 
         userViewModel.updateProfileImage(userId, avatarPart)
+    }
+
+    private fun loadProfileImage(user: User) {
+        val localPath = user.localProfilePicture // Prioridad local
+        val remoteUrl = user.profilePicture // Respaldo remoto
+
+        if (!localPath.isNullOrBlank() && File(localPath).exists()) {
+            // Carga desde la ruta local
+            Glide.with(this).load(File(localPath)).into(profileImage)
+        } else if (!remoteUrl.isNullOrBlank()) {
+            // Carga desde la URL remota y guarda localmente
+            Glide.with(this)
+                .load(remoteUrl)
+                .into(profileImage)
+                .clearOnDetach()
+        } else {
+            // Imagen por defecto
+            profileImage.setImageResource(R.drawable.ic_profile_placeholder)
+        }
     }
 }

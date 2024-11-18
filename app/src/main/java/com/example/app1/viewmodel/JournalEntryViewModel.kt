@@ -47,6 +47,9 @@ class JournalEntryViewModel @Inject constructor(
     private val _publishStatus = MutableLiveData<Response<JournalEntry>>()
     val publishStatus: LiveData<Response<JournalEntry>> get() = _publishStatus
 
+    private val _saveJournalState = MutableLiveData<Boolean>()
+    val saveJournalState: LiveData<Boolean> get() = _saveJournalState
+
     // Obtener todas las entradas localmente
     fun getUserJournals(userId: String): LiveData<List<JournalEntry>> = liveData {
         emit(journalRepository.getAllJournalEntries(userId))
@@ -81,9 +84,9 @@ class JournalEntryViewModel @Inject constructor(
 
     // Guardar un borrador de entrada de diario
     fun saveDraftJournalEntry(journalEntry: JournalEntry) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val success = journalRepository.saveDraft(journalEntry)
-            _syncStatus.postValue(success)
+        viewModelScope.launch {
+            val isSuccessful = journalRepository.saveDraft(journalEntry)
+            _saveJournalState.postValue(isSuccessful) // Actualizar el estado
         }
     }
 

@@ -35,36 +35,29 @@ class ImageViewModel @Inject constructor(
     val syncUiState: LiveData<UiState<Unit>> get() = _syncUiState
 
     // Obtener imágenes asociadas a un journal
-    fun getImagesByJournalId(journalId: String) {
-        _imageUiState.postValue(UiState.Loading)
-        viewModelScope.launch {
-            try {
-                val images = imageRepository.getImagesByJournalId(journalId)
-                _imageUiState.postValue(UiState.Success(images.value ?: emptyList()))
-            } catch (e: Exception) {
-                _imageUiState.postValue(UiState.Error("Error al cargar imágenes", e))
-            }
-        }
+     fun getImagesByJournalId(journalId: String): LiveData<List<Image>> {
+        return imageRepository.getImagesByJournalId(journalId)
     }
+
 
     // Añadir una imagen a un journal
     fun addImageToEntry(entryId: String, image: Image) {
-        _addImageUiState.postValue(UiState.Loading)
         viewModelScope.launch {
             try {
                 val response = imageRepository.addImageToEntry(entryId, image)
                 if (response.isSuccessful) {
                     response.body()?.let {
-                        _addImageUiState.postValue(UiState.Success(it))
-                    } ?: _addImageUiState.postValue(UiState.Error("Respuesta vacía del servidor"))
+                        Log.d("ImageViewModel", "Imagen añadida: ${it.imageId}")
+                    }
                 } else {
-                    _addImageUiState.postValue(UiState.Error("Error al añadir imagen: ${response.code()}"))
+                    Log.e("ImageViewModel", "Error al añadir imagen: ${response.message()}")
                 }
             } catch (e: Exception) {
-                _addImageUiState.postValue(UiState.Error("Error al añadir imagen", e))
+                Log.e("ImageViewModel", "Error al añadir imagen", e)
             }
         }
     }
+
 
     // Sincronizar imágenes de journals específicos
     fun syncImagesWithJournals(journalIds: List<String>) {
@@ -75,6 +68,32 @@ class ImageViewModel @Inject constructor(
                 _syncUiState.postValue(UiState.Success(Unit))
             } catch (e: Exception) {
                 _syncUiState.postValue(UiState.Error("Error al sincronizar imágenes", e))
+            }
+        }
+    }
+
+    fun syncImages(journalIds: List<String>) {
+        viewModelScope.launch {
+            try {
+                imageRepository.syncImages(journalIds)
+                Log.d("ImageViewModel", "Imágenes sincronizadas con journals: $journalIds")
+            } catch (e: Exception) {
+                Log.e("ImageViewModel", "Error al sincronizar imágenes", e)
+            }
+        }
+    }
+
+    // Descargar y guardar imágenes localmente
+    fun downloadImage(image: Image) {
+        viewModelScope.launch {
+            try {
+                val context = getApplication<Application>().applicationContext
+                val filePath = imageRepository.downloadAndSaveImageLocally(context, image)
+                if (filePath != null) {
+                    Log.d("ImageViewModel", "Imagen guardada localmente: $filePath")
+                }
+            } catch (e: Exception) {
+                Log.e("ImageViewModel", "Error al descargar la imagen", e)
             }
         }
     }

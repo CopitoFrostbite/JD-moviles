@@ -22,6 +22,7 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.Response
 import java.io.File
 import java.io.FileOutputStream
+import java.net.URL
 import javax.inject.Inject
 
 class UserRepository @Inject constructor(
@@ -128,8 +129,8 @@ class UserRepository @Inject constructor(
                 val response = api.getUserById(userId)
                 if (response.isSuccessful) {
                     response.body()?.let {
-                        userDao.clearUsers() // Clear existing users
-                        userDao.insertUser(it)
+
+                        userDao.updateUser(it)
                         return it
                     }
                 }
@@ -148,7 +149,7 @@ class UserRepository @Inject constructor(
             pendingUsers.forEach { user ->
                 try {
                     if (user.isDeleted) {
-                        api.userDeletedOnCloud(user.userId) // Aquí podría ir un endpoint de eliminación
+                        api.userDeletedOnCloud(user.userId)
                     } else if (user.isEdited) {
                         api.updateUser(user.userId, user)
                     }
@@ -164,7 +165,7 @@ class UserRepository @Inject constructor(
     // Guardar usuario en la DB local
     suspend fun saveUserToLocal(user: User) {
 
-        userDao.insertUser(user)
+        userDao.updateUser(user)
         PreferencesHelper.saveUserId(context, user.userId)
     }
 
@@ -208,33 +209,71 @@ class UserRepository @Inject constructor(
     suspend fun updateProfileImage(userId: String, avatar: MultipartBody.Part): Response<User> {
         return if (NetworkUtils.isNetworkAvailable(context)) {
             try {
-                // Actualizar en la nube
                 val response = api.updateUserProfileImage(userId, avatar)
                 if (response.isSuccessful) {
                     response.body()?.let { userResponse ->
-                        val updatedUser = userResponse.copy(isEdited = false)
+                        val localPath =
+                            userResponse.profilePicture?.let {
+                                saveImageToLocal(context,
+                                    it, userId)
+                            }
+                        val updatedUser = userResponse.copy(localProfilePicture = localPath)
                         userDao.updateUser(updatedUser)
-                        Log.d("updateProfileImage", "Updated user saved in Room: $updatedUser")
                     }
                 }
                 response
             } catch (e: Exception) {
-                Log.e("updateProfileImage", "Exception: ${e.message}", e)
-                Response.error(500, "Error al actualizar imagen".toResponseBody("text/plain".toMediaTypeOrNull()))
+                Response.error(500, "Error al actualizar imagen".toResponseBody())
             }
         } else {
-            // Sin conexión: actualizar localmente y marcar como `isEdited`
-            Log.w("updateProfileImage", "No hay conexión de red, actualizando localmente")
+            // Sin conexión: Solo guarda localmente
             val user = userDao.getUserById(userId)
             if (user != null) {
-                val editedUser = user.copy(isEdited = true, profilePicture = avatar.toString())
+                val editedUser = user.copy(
+                    isEdited = true,
+                    localProfilePicture = avatar.body.contentType().toString()
+                )
                 userDao.updateUser(editedUser)
-                Log.d("updateProfileImage", "Updated user locally: $editedUser")
                 Response.success(editedUser)
             } else {
-                Log.e("updateProfileImage", "User not found in local database")
-                Response.error(404, "Usuario no encontrado en la base de datos local".toResponseBody("text/plain".toMediaTypeOrNull()))
+                Response.error(404, "Usuario no encontrado".toResponseBody())
             }
+        }
+    }
+
+    private fun saveImageToLocal(context: Context, imageUrl: String, userId: String): String? {
+        return try {
+            val url = URL(imageUrl)
+            val connection = url.openConnection()
+            connection.connect()
+            val inputStream = connection.getInputStream()
+            val fileName = "${userId}_profile.jpg" // Construcción del nombre del archivo
+            val file = File(context.filesDir, fileName) // Guarda en almacenamiento interno
+            FileOutputStream(file).use { outputStream ->
+                inputStream.copyTo(outputStream)
+            }
+            file.absolutePath
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    fun downloadAndSaveImage(context: Context, imageUrl: String, userId: String): String? {
+        return try {
+            val url = URL(imageUrl)
+            val connection = url.openConnection()
+            connection.connect()
+            val inputStream = connection.getInputStream()
+            val fileName = "${userId}_profile.jpg"
+            val file = File(context.filesDir, fileName)
+            FileOutputStream(file).use { outputStream ->
+                inputStream.copyTo(outputStream)
+            }
+            file.absolutePath
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 

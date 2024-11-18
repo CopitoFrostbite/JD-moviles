@@ -63,6 +63,14 @@
         android:layout_gravity="center"
         android:visibility="gone" />
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewImages"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp" />
+
     <!-- Botón de Cerrar -->
     <Button
         android:id="@+id/btnClose"

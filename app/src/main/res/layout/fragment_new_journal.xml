@@ -50,6 +50,7 @@
         android:textAllCaps="false"
         android:layout_marginBottom="16dp"/>
 
+
     <!-- RecyclerView para Mostrar Imágenes Seleccionadas -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewImages"

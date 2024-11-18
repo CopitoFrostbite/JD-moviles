@@ -14,6 +14,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.Response
 import java.io.File
+import java.io.FileOutputStream
+import java.net.URL
 import javax.inject.Inject
 
 
@@ -25,6 +27,8 @@ class ImageRepository @Inject constructor(
 
     // Añadir una imagen a una entrada de journal
     suspend fun addImageToEntry(entryId: String, image: Image): Response<Image> {
+        Log.d("ImageRepository", "Iniciando addImageToEntry para entryId: $entryId")
+        Log.d("ImageRepository", "Datos de la imagen recibida: imageId=${image.imageId}, filePath=${image.filePath}, journalId=${image.journalId}, cloudUrl=${image.cloudUrl}")
         return if (NetworkUtils.isNetworkAvailable(context)) {
             try {
                 val response = api.addImageToEntry(entryId, image)
@@ -51,7 +55,7 @@ class ImageRepository @Inject constructor(
         imageDao.insertImages(images)
     }
 
-    suspend fun getImagesByJournalId(journalId: String): LiveData<List<Image>> {
+    fun getImagesByJournalId(journalId: String): LiveData<List<Image>> {
         return imageDao.getImagesByJournalId(journalId)
     }
 
@@ -82,6 +86,29 @@ class ImageRepository @Inject constructor(
     // Obtener imágenes pendientes de sincronizar (editadas o eliminadas)
     private suspend fun getPendingSyncImages(): List<Image> {
         return imageDao.getPendingSyncImages()
+    }
+
+    suspend fun downloadAndSaveImageLocally(context: Context, image: Image): String? {
+        return try {
+            val imageUrl = image.cloudUrl ?: return null
+            val url = URL(imageUrl)
+            val connection = url.openConnection()
+            connection.connect()
+            val inputStream = connection.getInputStream()
+
+            val fileName = "${image.imageId}.jpg"
+            val file = File(context.filesDir, fileName)
+            FileOutputStream(file).use { outputStream ->
+                inputStream.copyTo(outputStream)
+            }
+
+            // Actualiza la base de datos local con la ruta del archivo
+            imageDao.updateFilePath(image.imageId, file.absolutePath)
+            file.absolutePath
+        } catch (e: Exception) {
+            Log.e("ImageRepository", "Error al guardar la imagen localmente", e)
+            null
+        }
     }
 
     // Sincronizar imágenes pendientes

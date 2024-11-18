@@ -97,20 +97,24 @@ class UserViewModel @Inject constructor(
     }
     fun updateUserData(updatedUser: User): LiveData<Response<User>> {
         val result = MutableLiveData<Response<User>>()
-
         viewModelScope.launch(Dispatchers.IO) {
             val response = userRepository.updateUserData(updatedUser)
-            result.postValue(response)  // Publicar la respuesta directamente
+            if (response.isSuccessful) {
+                response.body()?.let { downloadAndSaveProfileImage(it) }
+            }
+            result.postValue(response)
         }
         return result
     }
 
     fun updateProfileImage(userId: String, avatarPart: MultipartBody.Part): LiveData<Response<User>> {
         val result = MutableLiveData<Response<User>>()
-
         viewModelScope.launch(Dispatchers.IO) {
             val response = userRepository.updateProfileImage(userId, avatarPart)
-            result.postValue(response)  // Publicar la respuesta directamente
+            if (response.isSuccessful) {
+                response.body()?.let { downloadAndSaveProfileImage(it) }
+            }
+            result.postValue(response)
         }
         return result
     }
@@ -121,12 +125,24 @@ class UserViewModel @Inject constructor(
     fun getCurrentUser(): LiveData<User?> = liveData(Dispatchers.IO) {
         val userId = PreferencesHelper.getUserId(getApplication())
         val user = if (userId?.isNotEmpty() == true) {
-            userRepository.getUserById(userId)
+            userRepository.getUserById(userId)?.also { downloadAndSaveProfileImage(it) }
         } else {
             null
         }
         _user.postValue(user)
         emit(user)
+    }
+
+    private suspend fun downloadAndSaveProfileImage(user: User) {
+        user.profilePicture?.let { imageUrl ->
+            val context = getApplication<Application>().applicationContext
+            val localPath = userRepository.downloadAndSaveImage(context, imageUrl, user.userId)
+            if (!localPath.isNullOrBlank()) {
+                val updatedUser = user.copy(localProfilePicture = localPath)
+                userRepository.saveUserToLocal(updatedUser) // Actualiza el usuario local
+                _user.postValue(updatedUser) // Actualiza LiveData
+            }
+        }
     }
 
     fun logout() {

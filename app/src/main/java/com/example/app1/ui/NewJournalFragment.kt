@@ -37,13 +37,16 @@ import com.example.app1.viewmodel.ImageViewModel
 import com.example.app1.viewmodel.JournalEntryViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
+import java.io.FileOutputStream
 import java.util.UUID
 
 @AndroidEntryPoint
 class NewJournalFragment : Fragment() {
 
     private val journalEntryViewModel: JournalEntryViewModel by viewModels()
-    private val selectedImages = mutableListOf<Uri>()
+    private val imageViewModel: ImageViewModel by viewModels()
+
+    private val selectedImages = mutableListOf<Image>()
     private lateinit var imagesAdapter: ImagesAdapter
     private lateinit var selectImagesLauncher: ActivityResultLauncher<Intent>
     private val moodMapping = mapOf(
@@ -62,6 +65,7 @@ class NewJournalFragment : Fragment() {
         setupImageSelector()
         setupRecyclerView(view)
         setupSpinner(view)
+        setupAddImageButton(view)
         setupSaveButton(view)
         setupObservers()
     }
@@ -74,9 +78,27 @@ class NewJournalFragment : Fragment() {
         }
     }
 
+    private fun setupAddImageButton(view: View) {
+        val btnAddImage = view.findViewById<Button>(R.id.btnAddImage)
+        btnAddImage.setOnClickListener {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                type = "image/*"
+                putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true) // Permitir múltiples selecciones
+                addCategory(Intent.CATEGORY_OPENABLE)
+            }
+            selectImagesLauncher.launch(intent)
+        }
+    }
+
     private fun setupRecyclerView(view: View) {
         val recyclerViewImages = view.findViewById<RecyclerView>(R.id.recyclerViewImages)
-        imagesAdapter = ImagesAdapter(selectedImages)
+
+        imagesAdapter = ImagesAdapter(selectedImages, { image ->
+            // Callback para eliminar la imagen
+            selectedImages.remove(image)
+            imagesAdapter.updateImages(selectedImages)
+        }, isEditable = true) // Modo edición
+
         recyclerViewImages.apply {
             adapter = imagesAdapter
             layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
@@ -106,8 +128,10 @@ class NewJournalFragment : Fragment() {
         if (!validateInputs(title, content)) return
 
         val mood = moodMapping[emotion] ?: 1
+        val journalId = UUID.randomUUID().toString()
+
         val journalEntry = JournalEntry(
-            journalId = UUID.randomUUID().toString(),
+            journalId = journalId,
             userId = PreferencesHelper.getUserId(requireContext()) ?: return,
             title = title,
             content = content,
@@ -116,16 +140,40 @@ class NewJournalFragment : Fragment() {
             isDeleted = false
         )
 
+
+
+        // Guardar journal como borrador
         journalEntryViewModel.saveDraftJournalEntry(journalEntry)
 
+        // Guardar imágenes asociadas
+        saveImages(journalId)
+
         if (isConnectedToInternet()) {
+            // Publicar journal y sincronizar imágenes
             journalEntryViewModel.publishJournalEntry(journalEntry)
+            imageViewModel.syncImagesWithJournals(listOf(journalId))
         } else {
             Toast.makeText(requireContext(), "No hay conexión. El journal se guardó como borrador.", Toast.LENGTH_SHORT).show()
         }
 
         navigateToMyJournals()
     }
+
+    private fun saveImages(journalId: String) {
+        selectedImages.forEach { image ->
+            val localFilePath = saveImageToLocal(Uri.parse(image.filePath), requireContext(), image.imageId)
+
+            // Crear una copia actualizada de la imagen con la ruta local
+            val updatedImage = image.copy(
+                journalId = journalId,
+                filePath = localFilePath
+            )
+
+            // Enviar la imagen al ViewModel
+            imageViewModel.addImageToEntry(journalId, updatedImage)
+        }
+    }
+
     private fun validateInputs(title: String, content: String): Boolean {
         if (title.isBlank() || content.isBlank()) {
             Toast.makeText(requireContext(), "Título y contenido son obligatorios", Toast.LENGTH_SHORT).show()
@@ -137,14 +185,37 @@ class NewJournalFragment : Fragment() {
     private fun handleSelectedImages(data: Intent?) {
         data?.let {
             if (it.clipData != null) {
+                // Múltiples imágenes seleccionadas
                 for (i in 0 until it.clipData!!.itemCount) {
-                    selectedImages.add(it.clipData!!.getItemAt(i).uri)
+                    val uri = it.clipData!!.getItemAt(i).uri
+                    addImageToSelectedList(uri)
                 }
             } else {
-                it.data?.let { uri -> selectedImages.add(uri) }
+                // Una sola imagen seleccionada
+                it.data?.let { uri -> addImageToSelectedList(uri) }
             }
-            imagesAdapter.notifyDataSetChanged()
+            imagesAdapter.notifyDataSetChanged() // Actualizar RecyclerView
         }
+    }
+
+    private fun addImageToSelectedList(uri: Uri) {
+        val image = Image(
+            imageId = UUID.randomUUID().toString(),
+            journalId = "", // Se asignará más tarde
+            filePath = uri.toString(), // Ruta del URI
+            cloudUrl = null
+        )
+        selectedImages.add(image)
+    }
+
+    private fun saveImageToLocal(uri: Uri, context: Context, imageId: String): String {
+        val file = File(context.filesDir, "$imageId.jpg")
+        context.contentResolver.openInputStream(uri)?.use { inputStream ->
+            FileOutputStream(file).use { outputStream ->
+                inputStream.copyTo(outputStream)
+            }
+        }
+        return file.absolutePath // Devuelve la ruta del archivo guardado
     }
 
     private fun setupObservers() {
@@ -164,6 +235,8 @@ class NewJournalFragment : Fragment() {
             addToBackStack(null)
         }
     }
+
+
 
     private fun isConnectedToInternet(): Boolean {
         val connectivityManager = context?.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager

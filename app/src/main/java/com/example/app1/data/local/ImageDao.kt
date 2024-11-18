@@ -18,6 +18,7 @@ interface ImageDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertImages(images: List<Image>)
 
+
     // Actualización de una imagen específica
     @Update
     suspend fun updateImage(image: Image)
@@ -26,6 +27,8 @@ interface ImageDao {
     @Query("SELECT * FROM images WHERE journalId = :journalId AND isDeleted = 0")
     fun getImagesByJournalId(journalId: String): LiveData<List<Image>>
 
+    @Query("UPDATE images SET filePath = :filePath WHERE imageId = :imageId")
+    suspend fun updateFilePath(imageId: String, filePath: String)
 
     // Marcar una imagen como editada
     @Query("UPDATE images SET isEdited = :isEdited WHERE imageId = :imageId")
