@@ -65,120 +65,80 @@ class MyJournalsFragment : Fragment() {
     private val tempFilters: MutableList<(JournalEntry) -> Boolean> = mutableListOf()
     private var searchBottomSheetDialog: BottomSheetDialog? = null
 
+    @SuppressLint("MissingInflatedId")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View = inflater.inflate(R.layout.fragment_my_journals, container, false)
+    ): View? {
+        val view = inflater.inflate(R.layout.fragment_my_journals, container, false)
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        setupRecyclerView(view)
-        setupFabListeners(view)
-        observeViewModelStates()
-    }
-
-    private fun setupRecyclerView(view: View) {
-        val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerView)
+// Configura el RecyclerView y el Adaptador
         journalAdapter = JournalAdapter(
             journals = listOf(),
             onPublishDraft = { draft -> journalViewModel.publishJournalEntry(draft) },
             onJournalClick = { journalId -> showJournalDetails(journalId) },
-            onDelete = { journalId -> journalViewModel.markAsDeleted(journalId) }
+            onDelete = { journalId ->
+                // Llama a markAsDeleted y pasa el ID directamente
+                journalViewModel.markAsDeleted(journalId)
+
+                // Observa el resultado de la eliminación
+                journalViewModel.deleteStatus.observe(viewLifecycleOwner) { isDeleted ->
+                    if (isDeleted) {
+                        Toast.makeText(requireContext(), "Entrada eliminada con éxito", Toast.LENGTH_SHORT).show()
+                        // Actualiza la lista eliminando el JournalEntry correspondiente
+                        journalList = journalList.filter { it.journalId != journalId }
+                        journalAdapter.updateJournals(journalList)
+                    } else {
+                        Toast.makeText(requireContext(), "Error al eliminar la entrada", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
         )
+        val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerView)
+
         recyclerView.layoutManager = LinearLayoutManager(context)
         recyclerView.adapter = journalAdapter
-    }
-
-    private fun setupFabListeners(view: View) {
         fabSort = view.findViewById(R.id.fabSort)
         fabSortDirection = view.findViewById(R.id.fabSortDirection)
+        updateSortDirectionIcon(isAscendingOrder)
 
-        fabSort.setOnClickListener {
+        // Listener para el FAB de ordenar
+        view.findViewById<FloatingActionButton>(R.id.fabSort).setOnClickListener {
             showSortBottomSheet()
         }
 
+        // Listener para el FAB de buscar
         view.findViewById<FloatingActionButton>(R.id.fabSearch).setOnClickListener {
             showSearchBottomSheet()
         }
 
+        // Botón de sincronización manual que verifica la conexión a internet antes de sincronizar todos los journals
         view.findViewById<FloatingActionButton>(R.id.fabSync).setOnClickListener {
             if (isConnectedToInternet()) {
-                syncAllEntries()
+                syncAllEntries()  // Llama a la función de sincronización manual en el ViewModel
                 Toast.makeText(requireContext(), "Sincronización en proceso...", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(requireContext(), "Conexión a internet no disponible", Toast.LENGTH_SHORT).show()
             }
         }
-    }
-
-    private fun observeViewModelStates() {
-        // Observa el estado de los journals
-        journalViewModel.journalUiState.observe(viewLifecycleOwner) { state ->
-            when (state) {
-                is UiState.Loading -> {
-                    showLoading(true) // Mostrar indicador de carga
-                }
-                is UiState.Success -> {
-                    showLoading(false) // Ocultar indicador de carga
-                    val journals = state.data
-                    if (journals.isEmpty()) {
-                        Toast.makeText(requireContext(), "No hay entradas disponibles", Toast.LENGTH_SHORT).show()
-                    } else {
-                        journalList = journals
-                        journalAdapter.updateJournals(journalList) // Actualizar RecyclerView
-                    }
-                }
-                is UiState.Error -> {
-                    showLoading(false) // Ocultar indicador de carga
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
-                }
+        // Observa el resultado de la sincronización
+        journalViewModel.syncStatus.observe(viewLifecycleOwner) { result ->
+            if (result) {
+                Toast.makeText(requireContext(), "Sincronización exitosa", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(requireContext(), "Error en la sincronización", Toast.LENGTH_SHORT).show()
             }
         }
 
-        // Observa el estado de sincronización
-        journalViewModel.syncUiState.observe(viewLifecycleOwner) { state ->
-            when (state) {
-                is UiState.Loading -> {
-                    Toast.makeText(requireContext(), "Sincronizando...", Toast.LENGTH_SHORT).show()
-                }
-                is UiState.Success -> {
-                    Toast.makeText(requireContext(), "Sincronización exitosa", Toast.LENGTH_SHORT).show()
-                }
-                is UiState.Error -> {
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
-                }
+        //Observa los journals del ViewModel y guarda la lista completa
+        journalViewModel.getUserJournals(PreferencesHelper.getUserId(requireContext()) ?: "")
+            .observe(viewLifecycleOwner) { journals ->
+                journalList = journals
+                journalAdapter.updateJournals(journalList) // Asegúrate de actualizar el adaptador
             }
-        }
 
-        // Observa el estado de eliminación
-        journalViewModel.deleteUiState.observe(viewLifecycleOwner) { state ->
-            when (state) {
-                is UiState.Loading -> {
-                    Toast.makeText(requireContext(), "Eliminando entrada...", Toast.LENGTH_SHORT).show()
-                }
-                is UiState.Success -> {
-                    Toast.makeText(requireContext(), "Entrada eliminada con éxito", Toast.LENGTH_SHORT).show()
-                    journalList = journalList.filter { it.journalId != state.data }
-                    journalAdapter.updateJournals(journalList)
-                }
-                is UiState.Error -> {
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
 
-        // Cargar entradas al iniciar el fragmento
-        val userId = PreferencesHelper.getUserId(requireContext())
-        if (userId != null) {
-            journalViewModel.getUserJournals(userId)
-        } else {
-            Toast.makeText(requireContext(), "Error al cargar el usuario", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun showLoading(isLoading: Boolean) {
-        val progressBar = view?.findViewById<ProgressBar>(R.id.progressBar)
-        progressBar?.visibility = if (isLoading) View.VISIBLE else View.GONE
+        return view
     }
 
     private fun showSortBottomSheet() {
@@ -423,7 +383,4 @@ class MyJournalsFragment : Fragment() {
         val activeNetwork = connectivityManager.activeNetworkInfo
         return activeNetwork != null && activeNetwork.isConnected
     }
-
-
-
 }

@@ -1,6 +1,7 @@
 package com.example.app1.ui
 
 import android.annotation.SuppressLint
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -12,8 +13,12 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.app1.R
+import com.example.app1.data.model.Image
 import com.example.app1.data.model.JournalEntry
+import com.example.app1.ui.adapters.ImagesAdapter
 import com.example.app1.utils.UiState
 import com.example.app1.viewmodel.JournalEntryViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -36,6 +41,7 @@ class JournalDetailFragment : DialogFragment() {
         }
     }
 
+
     override fun onStart() {
         super.onStart()
         dialog?.window?.setLayout(
@@ -43,6 +49,7 @@ class JournalDetailFragment : DialogFragment() {
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
     }
+
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(
@@ -54,54 +61,39 @@ class JournalDetailFragment : DialogFragment() {
         // Recuperar el ID del journal desde los argumentos
         arguments?.getString("journalId")?.let {
             journalId = it
-            observeJournalDetails(journalId)
+            loadJournalDetails(journalId)
         }
-
-        // Configurar botón de cerrar con animación
         view.findViewById<Button>(R.id.btnClose).setOnTouchListener { v, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     v.animate().scaleX(0.95f).scaleY(0.95f).setDuration(100).start()
                 }
+
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     v.animate().scaleX(1f).scaleY(1f).setDuration(100).start()
                     dismiss()
                 }
             }
             false
+
         }
 
         return view
     }
 
-    private fun observeJournalDetails(journalId: String) {
-        // Observa el UiState del JournalEntry en el ViewModel
-        journalViewModel.getJournalEntryById(journalId).observe(viewLifecycleOwner) { state ->
-            when (state) {
-                is UiState.Loading -> {
-                    showLoading(true) // Mostrar indicador de carga
-                }
-                is UiState.Success -> {
-                    showLoading(false) // Ocultar indicador de carga
-                    displayJournalDetails(state.data) // Mostrar los detalles del journal
-                }
-                is UiState.Error -> {
-                    showLoading(false) // Ocultar indicador de carga
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
-                }
+    private fun loadJournalDetails(journalId: String) {
+        // Observa el JournalEntry desde el ViewModel
+        journalViewModel.getJournalEntryById(journalId).observe(viewLifecycleOwner) { journal ->
+            journal?.let {
+                // Muestra los detalles en los TextViews
+                view?.findViewById<TextView>(R.id.tvJournalTitle)?.text = it.title
+                view?.findViewById<TextView>(R.id.tvJournalDate)?.text = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(it.date)
+                view?.findViewById<TextView>(R.id.tvJournalContent)?.text = it.content
+                view?.findViewById<TextView>(R.id.tvJournalMood)?.text = getMoodText(it.mood)
             }
         }
     }
 
-    private fun displayJournalDetails(journal: JournalEntry?) {
-        journal?.let {
-            // Muestra los detalles en los TextViews
-            view?.findViewById<TextView>(R.id.tvJournalTitle)?.text = it.title
-            view?.findViewById<TextView>(R.id.tvJournalDate)?.text = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(it.date)
-            view?.findViewById<TextView>(R.id.tvJournalContent)?.text = it.content
-            view?.findViewById<TextView>(R.id.tvJournalMood)?.text = getMoodText(it.mood)
-        }
-    }
 
     private fun getMoodText(mood: Int): String {
         return when (mood) {
@@ -113,10 +105,5 @@ class JournalDetailFragment : DialogFragment() {
             6 -> "Inconforme"
             else -> "Desconocido"
         }
-    }
-
-    private fun showLoading(isLoading: Boolean) {
-        val progressBar = view?.findViewById<ProgressBar>(R.id.progressBar)
-        progressBar?.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 }

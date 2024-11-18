@@ -114,9 +114,10 @@ object AppModule {
     fun provideJournalEntryRepository(
         api: JournalApiService,
         journalEntryDao: JournalEntryDao,
+        imageRepository: ImageRepository,
         @ApplicationContext context: Context
     ): JournalEntryRepository {
-        return JournalEntryRepository(api, journalEntryDao, context)
+        return JournalEntryRepository(api, journalEntryDao,imageRepository, context)
     }
 
     @Singleton

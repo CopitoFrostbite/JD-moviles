@@ -115,13 +115,14 @@ interface JournalApiService {
         @Path("imageId") imageId: String
     ): Response<Void>
 
+
+
     @Multipart
-    @POST("images/add")
-    suspend fun addImagesToEntry(
-        @Part("journalId") journalId: RequestBody,
-        @Part images: List<MultipartBody.Part>,
-        @Part("descriptions") descriptions: List<RequestBody?>? = null
-    ): Response<List<Image>>
+    @POST("journals/{journalId}/images")
+    suspend fun uploadJournalImages(
+        @Path("journalId") journalId: RequestBody,
+        @Part images: List<MultipartBody.Part>
+    ): Response<Unit>
 
     // Reminder-related endpoints
     @POST("reminders")

@@ -111,25 +111,5 @@ class ImageRepository @Inject constructor(
         }
     }
 
-    suspend fun addImagesToEntry(entryId: String, files: List<File>, descriptions: List<String?>?): Response<List<Image>> {
-        val journalIdPart = entryId.toRequestBody("text/plain".toMediaTypeOrNull())
 
-        // Crear partes para las imágenes
-        val imageParts = files.map { file ->
-            val requestBody = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
-            MultipartBody.Part.createFormData("images", file.name, requestBody)
-        }
-
-        // Crear partes para las descripciones
-        val descriptionParts = descriptions?.map { description ->
-            description?.toRequestBody("text/plain".toMediaTypeOrNull())
-        }
-
-        return try {
-            api.addImagesToEntry(journalIdPart, imageParts, descriptionParts)
-        } catch (e: Exception) {
-            Log.e("ImageRepository", "Error al añadir múltiples imágenes", e)
-            Response.error(500, "Error al añadir imágenes".toResponseBody("text/plain".toMediaTypeOrNull()))
-        }
-    }
 }

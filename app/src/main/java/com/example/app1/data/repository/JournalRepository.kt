@@ -17,21 +17,24 @@ import com.example.app1.utils.NetworkUtils
 import com.example.app1.utils.PreferencesHelper
 
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.Response
+import java.io.File
 
 import javax.inject.Inject
 
 class JournalEntryRepository @Inject constructor(
     private val api: JournalApiService,
-    private val imageRepository: ImageRepository,
     private val journalDao: JournalEntryDao,
-    private val imageDao: ImageDao,
+    private val imageRepository: ImageRepository, // Mantener interacción explícita
     private val context: Context
 ) {
 
-    private suspend fun registerJournalEntry(journalRequest: JournalApiService.JournalRequest): Response<JournalEntry> {
+    suspend fun registerJournalEntry(journalRequest: JournalApiService.JournalRequest): Response<JournalEntry> {
         val journalEntry = journalDao.getEntryById(journalRequest.journalId)
         if (journalEntry?.isDraft == true || journalEntry?.isDeleted == true) {
             return Response.success(journalEntry)
@@ -44,24 +47,6 @@ class JournalEntryRepository @Inject constructor(
             }
             response
         }
-    }
-
-    suspend fun registerJournalEntryWithImages(
-        journalRequest: JournalApiService.JournalRequest,
-        images: List<Image>
-    ): Boolean {
-        val journalResponse = registerJournalEntry(journalRequest)
-        if (journalResponse.isSuccessful) {
-            images.forEach { image ->
-                imageRepository.addImageToEntry(journalRequest.journalId, image)
-            }
-            return true
-        }
-        return false
-    }
-
-    fun getJournalWithImages(journalId: String): LiveData<JournalWithImages> {
-        return journalDao.getJournalWithImages(journalId)
     }
 
     // Publicar una entrada de diario en la nube
@@ -100,6 +85,25 @@ class JournalEntryRepository @Inject constructor(
         return journalDao.getAllEntriesByUserId(userId).filter { !it.isDeleted }
     }
 
+    /*suspend fun getAllJournalEntries(userId: String): List<JournalEntry> {
+        return try {
+            if (NetworkUtils.isNetworkAvailable(context)) {
+                val response = api.getAllJournalEntries(userId)
+                if (response.isSuccessful) {
+                    val cloudEntries = response.body()?.filter { !it.isDeleted } ?: emptyList()
+                    journalDao.insertAll(cloudEntries) // Sincroniza los datos en la base de datos local
+                    cloudEntries
+                } else {
+                    journalDao.getAllEntriesByUserId(userId).filter { !it.isDeleted }
+                }
+            } else {
+                journalDao.getAllEntriesByUserId(userId).filter { !it.isDeleted }
+            }
+        } catch (e: Exception) {
+            Log.e("JournalEntryRepository", "Error al obtener entradas de diario", e)
+            journalDao.getAllEntriesByUserId(userId).filter { !it.isDeleted }
+        }
+    }*/
 
 
     // Obtener una entrada de diario específica localmente
@@ -107,6 +111,27 @@ class JournalEntryRepository @Inject constructor(
         return journalDao.getEntryById(journalId)?.takeIf { !it.isDeleted }
     }
 
+    /*suspend fun getJournalEntryById(journalId: String): JournalEntry? {
+        return try {
+            if (NetworkUtils.isNetworkAvailable(context)) {
+                val response = api.getJournalEntryById(journalId)
+                if (response.isSuccessful) {
+                    val journalEntry = response.body()
+                    if (journalEntry != null) {
+                        journalDao.insertEntry(journalEntry) // Actualiza la base de datos local
+                    }
+                    journalEntry
+                } else {
+                    journalDao.getEntryById(journalId)
+                }
+            } else {
+                journalDao.getEntryById(journalId)
+            }
+        } catch (e: Exception) {
+            Log.e("JournalEntryRepository", "Error al obtener entrada de diario por ID", e)
+            journalDao.getEntryById(journalId)
+        }
+    }*/
 
 
     // Sincronizar todas las entradas con la nube
@@ -117,12 +142,7 @@ class JournalEntryRepository @Inject constructor(
             val response = api.getAllJournalEntries(userId)
             if (response.isSuccessful) {
                 val cloudEntries = response.body()?.filter { !it.isDeleted } ?: emptyList()
-                journalDao.insertAll(cloudEntries)
-
-                // Sincronizar imágenes asociadas usando ImageRepository
-                cloudEntries.forEach { journal ->
-                    imageRepository.syncImages(listOf(journal.journalId))
-                }
+                journalDao.insertAll(cloudEntries) // Sobrescribir datos locales con los de la nube
                 true
             } else {
                 false
@@ -131,18 +151,6 @@ class JournalEntryRepository @Inject constructor(
             Log.e("JournalEntryRepository", "Error sincronizando entradas", e)
             false
         }
-    }
-
-    suspend fun publishJournalWithImages(journal: JournalEntry, images: List<Image>): Boolean {
-        val journalRequest = journal.toRequest()
-        val journalResponse = registerJournalEntry(journalRequest)
-        if (journalResponse.isSuccessful) {
-            images.forEach { image ->
-                imageRepository.addImageToEntry(journal.journalId, image)
-            }
-            return true
-        }
-        return false
     }
 
     suspend fun markAsDeleted(journalId: String) {
@@ -154,9 +162,10 @@ class JournalEntryRepository @Inject constructor(
             apiCall()
         } catch (e: Exception) {
             Log.e("Repository", "Error during API call", e)
-            throw e
+            throw e // Relanza la excepción para que sea manejada en otro nivel si es necesario
         }
     }
-
-
 }
+
+
+

@@ -21,8 +21,7 @@ interface JournalEntryDao {
     suspend fun getEntryById(journalId: String, isDraft: Boolean? = null): JournalEntry?
 
     @Query("SELECT * FROM journal_entries WHERE userId = :userId AND isDeleted = 0")
-    fun getAllEntriesByUserId(userId: String): List<JournalEntry>
-
+    suspend fun getAllEntriesByUserId(userId: String): List<JournalEntry>
     @Transaction
     @Query("SELECT * FROM journal_entries WHERE journalId = :journalId")
     fun getJournalWithImages(journalId: String): LiveData<JournalWithImages>
