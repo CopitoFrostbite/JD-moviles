@@ -7,6 +7,10 @@ import com.example.app1.data.local.ImageDao
 import com.example.app1.data.remote.JournalApiService
 import com.example.app1.data.model.Image
 import com.example.app1.utils.NetworkUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -122,27 +126,58 @@ class ImageRepository @Inject constructor(
 
     // Sincronizar imágenes pendientes
     suspend fun syncImages(journalIds: List<String>? = null) {
-        if (!NetworkUtils.isNetworkAvailable(context)) return
+        // Verificar la conexión antes de proceder
+        if (!NetworkUtils.isNetworkAvailable(context)) {
+            Log.e("ImageRepository", "Sin conexión a Internet. Sincronización cancelada.")
+            return
+        }
 
-        val pendingImages = journalIds?.let { ids ->
-            imageDao.getPendingSyncImages().filter { it.journalId in ids }
-        } ?: imageDao.getPendingSyncImages()
+        val pendingImages = withContext(Dispatchers.IO) {
+            journalIds?.let { ids ->
+                imageDao.getPendingSyncImages().filter { it.journalId in ids }
+            } ?: imageDao.getPendingSyncImages()
+        }
 
-        pendingImages.forEach { image ->
-            try {
-                if (image.isDeleted) {
-                    val deleteResponse = api.deleteImage(image.imageId)
-                    if (deleteResponse.isSuccessful) {
-                        imageDao.deleteImageById(image.imageId)
-                    }
-                } else if (image.isEdited) {
-                    val response = api.addImageToEntry(image.journalId, image)
-                    if (response.isSuccessful) {
-                        imageDao.insertImage(image.copy(isEdited = false))
+        // Procesar imágenes en paralelo
+        withContext(Dispatchers.IO) {
+            pendingImages.map { image ->
+                async {
+                    retryWithBackoff {
+                        try {
+                            if (image.isDeleted) {
+                                val deleteResponse = api.deleteImage(image.imageId)
+                                if (deleteResponse.isSuccessful) {
+                                    imageDao.deleteImageById(image.imageId)
+                                }
+                            } else if (image.isEdited) {
+                                val response = api.addImageToEntry(image.journalId, image)
+                                if (response.isSuccessful) {
+                                    imageDao.insertImage(image.copy(isEdited = false))
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Log.e("ImageRepository", "Error al sincronizar imagen: ${image.imageId}", e)
+                        }
                     }
                 }
+            }.awaitAll() // Esperar a que todos los procesos concurrentes finalicen
+        }
+    }
+
+    // Función para manejar reintentos con backoff exponencial
+    private suspend fun retryWithBackoff(retries: Int = 3, block: suspend () -> Unit) {
+        var attempt = 0
+        var delayTime = 1000L // 1 segundo
+
+        while (attempt < retries) {
+            try {
+                block()
+                return
             } catch (e: Exception) {
-                Log.e("ImageRepository", "Error al sincronizar imagen: ${image.imageId}", e)
+                attempt++
+                if (attempt >= retries) throw e
+                kotlinx.coroutines.delay(delayTime)
+                delayTime *= 2 // Incremento exponencial
             }
         }
     }

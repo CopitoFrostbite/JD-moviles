@@ -143,4 +143,11 @@ interface JournalApiService {
 
     @PUT("reminder/{reminderId}/mark_deleted")
     suspend fun markReminderDeleted(@Path("reminderId") reminderId: String): Response<Reminder>
+
+    // Settings-related endpoints
+    @POST("settings")
+    suspend fun updateSettings(@Body settings: Settings): Response<Settings>
+
+    @GET("settings/user/{userId}")
+    suspend fun getSettingsByUserId(@Path("userId") userId: String): Response<Settings>
 }

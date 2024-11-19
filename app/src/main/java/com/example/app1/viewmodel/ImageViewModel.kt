@@ -34,6 +34,7 @@ class ImageViewModel @Inject constructor(
     private val _syncUiState = MutableLiveData<UiState<Unit>>()
     val syncUiState: LiveData<UiState<Unit>> get() = _syncUiState
 
+
     // Obtener imágenes asociadas a un journal
      fun getImagesByJournalId(journalId: String): LiveData<List<Image>> {
         return imageRepository.getImagesByJournalId(journalId)
@@ -78,6 +79,7 @@ class ImageViewModel @Inject constructor(
                 imageRepository.syncImages(journalIds)
                 _syncUiState.postValue(UiState.Success(Unit))
             } catch (e: Exception) {
+                Log.e("SyncViewModel", "Error al sincronizar imágenes: ${e.localizedMessage}", e)
                 _syncUiState.postValue(UiState.Error("Error al sincronizar imágenes", e))
             }
         }
