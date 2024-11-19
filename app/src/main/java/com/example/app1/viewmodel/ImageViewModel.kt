@@ -39,6 +39,17 @@ class ImageViewModel @Inject constructor(
         return imageRepository.getImagesByJournalId(journalId)
     }
 
+    fun deleteImageById(imageId: String) {
+        viewModelScope.launch {
+            try {
+                imageRepository.deleteImageById(imageId)
+                Log.d("ImageViewModel", "Imagen eliminada: $imageId")
+            } catch (e: Exception) {
+                Log.e("ImageViewModel", "Error al eliminar imagen: $imageId", e)
+            }
+        }
+    }
+
 
     // Añadir una imagen a un journal
     fun addImageToEntry(entryId: String, image: Image) {

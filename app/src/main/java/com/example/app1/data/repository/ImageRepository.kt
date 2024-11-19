@@ -59,6 +59,15 @@ class ImageRepository @Inject constructor(
         return imageDao.getImagesByJournalId(journalId)
     }
 
+    suspend fun deleteImageById(imageId: String) {
+        try {
+            imageDao.deleteImageById(imageId)
+            Log.d("ImageRepository", "Imagen eliminada físicamente: $imageId")
+        } catch (e: Exception) {
+            Log.e("ImageRepository", "Error al eliminar imagen: $imageId", e)
+        }
+    }
+
     // Obtener imágenes desde la API
     suspend fun getImagesByEntryIdFromApi(entryId: String): Response<List<Image>> {
         return try {

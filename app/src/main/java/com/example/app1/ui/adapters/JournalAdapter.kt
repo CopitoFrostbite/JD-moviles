@@ -1,6 +1,8 @@
 package com.example.app1.ui.adapters
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
+import android.content.Context
 import android.graphics.Color
 import android.icu.text.SimpleDateFormat
 import android.view.LayoutInflater
@@ -22,7 +24,8 @@ class JournalAdapter(
     private val onPublishDraft: (JournalEntry) -> Unit,
     private val onJournalClick: (journalId: String) -> Unit,
     private val onDelete: (journalId: String) -> Unit,
-    private val onEdit: (journalId: String) -> Unit
+    private val onEdit: (journalId: String) -> Unit,
+    private val context: Context
 ) : RecyclerView.Adapter<JournalAdapter.JournalViewHolder>() {
 
     private var selectedPosition = -1
@@ -87,11 +90,22 @@ class JournalAdapter(
             onEdit(journal.journalId)
         }
         holder.btnDelete.setOnClickListener {
-            onDelete(journal.journalId) //
+            showDeleteConfirmationDialog(journal.journalId)
         }
     }
 
     override fun getItemCount(): Int = journals.size
+
+    private fun showDeleteConfirmationDialog(journalId: String) {
+        AlertDialog.Builder(context)
+            .setTitle("Confirmación")
+            .setMessage("¿Estás seguro de que quieres borrar este diario?")
+            .setPositiveButton("Sí") { _, _ ->
+                onDelete(journalId)
+            }
+            .setNegativeButton("No", null) // No hacer nada si el usuario cancela
+            .show()
+    }
 
     fun updateJournals(newJournals: List<JournalEntry>) {
         val diffCallback = JournalDiffCallback(journals, newJournals)

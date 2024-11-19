@@ -94,7 +94,8 @@ class MyJournalsFragment : Fragment() {
                     }
                 }
             },
-            onEdit = { journalId -> openEditJournalFragment(journalId) }
+            onEdit = { journalId -> openEditJournalFragment(journalId) },
+            context = requireContext()
         )
         val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerView)
 

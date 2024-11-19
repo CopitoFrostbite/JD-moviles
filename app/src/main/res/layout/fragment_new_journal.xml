@@ -1,70 +1,98 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
     tools:context=".ui.NewJournalFragment">
 
-    <!-- Título del Diario -->
-    <EditText
-        android:id="@+id/etJournalTitle"
+    <!-- Contenido Principal -->
+    <LinearLayout
+        android:id="@+id/mainContent"
         android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Título del Diario -->
+        <EditText
+            android:id="@+id/etJournalTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Título del diario"
+            android:padding="10dp"
+            android:textColor="@color/mySecondary"
+            android:background="?attr/selectableItemBackground"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Contenido del Diario -->
+        <EditText
+            android:id="@+id/etJournalContent"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:hint="Contenido del diario"
+            android:padding="10dp"
+            android:textColor="@color/mySecondary"
+            android:background="?attr/selectableItemBackground"
+            android:gravity="top"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Selección de Estado de Ánimo -->
+        <Spinner
+            android:id="@+id/spinnerEmotion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Botón para Agregar Imágenes -->
+        <Button
+            android:id="@+id/btnAddImage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Agregar Imagen"
+            android:background="@color/myPrimary"
+            android:textAllCaps="false"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- RecyclerView para Mostrar Imágenes Seleccionadas -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewImages"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Botón para Guardar el Diario -->
+        <Button
+            android:id="@+id/btnSaveJournal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Guardar Diario"
+            android:background="@color/myPrimary"
+            android:textAllCaps="false"/>
+    </LinearLayout>
+
+    <!-- Pantalla de Carga -->
+    <LinearLayout
+        android:id="@+id/loadingScreen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:hint="Título del diario"
-        android:padding="10dp"
-        android:textColor="@color/mySecondary"
-        android:background="?attr/selectableItemBackground"
-        android:layout_marginBottom="16dp"/>
-
-    <!-- Contenido del Diario -->
-    <EditText
-        android:id="@+id/etJournalContent"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:hint="Contenido del diario"
-        android:padding="10dp"
-        android:textColor="@color/mySecondary"
-        android:background="?attr/selectableItemBackground"
-        android:gravity="top"
-        android:layout_marginBottom="16dp"/>
-
-    <!-- Selección de Estado de Ánimo -->
-    <Spinner
-        android:id="@+id/spinnerEmotion"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"/>
-
-    <!-- Botón para Agregar Imágenes -->
-    <Button
-        android:id="@+id/btnAddImage"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Agregar Imagen"
-        android:background="@color/myPrimary"
-        android:textAllCaps="false"
-        android:layout_marginBottom="16dp"/>
-
-
-    <!-- RecyclerView para Mostrar Imágenes Seleccionadas -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewImages"
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:orientation="horizontal"
-        android:layout_marginBottom="16dp"/>
-
-    <!-- Botón para Guardar el Diario -->
-    <Button
-        android:id="@+id/btnSaveJournal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Guardar Diario"
-        android:background="@color/myPrimary"
-        android:textAllCaps="false"/>
-</LinearLayout>
+        android:layout_marginTop="16dp"
+        android:text="Guardando..."
+        android:textColor="@android:color/white"
+        android:textSize="16sp" />
+    </LinearLayout>
+</FrameLayout>

@@ -49,6 +49,8 @@ class NewJournalFragment : Fragment() {
     private val selectedImages = mutableListOf<Image>()
     private lateinit var imagesAdapter: ImagesAdapter
     private lateinit var selectImagesLauncher: ActivityResultLauncher<Intent>
+    private val existingImageIds = mutableSetOf<String>()
+    private val deletedImages = mutableListOf<Image>()
     private val moodMapping = mapOf(
         "Triste" to 1, "Ira" to 2, "Sorpresa" to 3,
         "Miedo" to 4, "Feliz" to 5, "Inconforme" to 6
@@ -108,6 +110,8 @@ class NewJournalFragment : Fragment() {
             images?.let {
                 selectedImages.clear()
                 selectedImages.addAll(it)
+                existingImageIds.clear()
+                existingImageIds.addAll(it.map { image -> image.imageId }) // Guardar IDs existentes
                 imagesAdapter.updateImages(selectedImages)
             }
         }
@@ -137,10 +141,14 @@ class NewJournalFragment : Fragment() {
         val recyclerViewImages = view.findViewById<RecyclerView>(R.id.recyclerViewImages)
 
         imagesAdapter = ImagesAdapter(selectedImages, { image ->
-            // Callback para eliminar la imagen
+            // Si la imagen ya está guardada, agrégala a la lista de eliminados
+            if (image.imageId in existingImageIds) {
+                deletedImages.add(image)
+            }
+            // Eliminar de la lista seleccionada
             selectedImages.remove(image)
             imagesAdapter.updateImages(selectedImages)
-        }, isEditable = true) // Modo edición
+        }, isEditable = true)
 
         recyclerViewImages.apply {
             adapter = imagesAdapter
@@ -172,10 +180,14 @@ class NewJournalFragment : Fragment() {
         if (!validateInputs(title, content)) return
 
         val mood = moodMapping[emotion] ?: 1
+        val isEditMode = ::journalId.isInitialized
 
+        if (!isEditMode) {
+            journalId = UUID.randomUUID().toString()
+        }
 
         val journalEntry = JournalEntry(
-            journalId = if (::journalId.isInitialized) journalId else UUID.randomUUID().toString(),
+            journalId = journalId,
             userId = PreferencesHelper.getUserId(requireContext()) ?: return,
             title = title,
             content = content,
@@ -184,20 +196,16 @@ class NewJournalFragment : Fragment() {
             isDeleted = false
         )
 
-        if (::journalId.isInitialized) {
-            // Modo edición
+        if (isEditMode) {
             journalEntryViewModel.updateJournalEntry(journalEntry)
         } else {
-            // Modo creación
             journalEntryViewModel.saveDraftJournalEntry(journalEntry)
         }
 
-
-        // Guardar imágenes asociadas
-        saveImages(journalId)
+        saveImages(journalId) // Guarda solo imágenes nuevas
+        deleteImagesFromDatabase()
 
         if (isConnectedToInternet()) {
-            // Publicar journal y sincronizar imágenes
             journalEntryViewModel.publishJournalEntry(journalEntry)
             imageViewModel.syncImagesWithJournals(listOf(journalId))
         } else {
@@ -207,17 +215,29 @@ class NewJournalFragment : Fragment() {
         navigateToMyJournals()
     }
 
+    private fun deleteImagesFromDatabase() {
+        deletedImages.forEach { image ->
+            imageViewModel.deleteImageById(image.imageId) // Llama al ViewModel para eliminar de la base de datos
+            val localFile = File(image.filePath)
+            if (localFile.exists()) {
+                localFile.delete() // Opcional: elimina el archivo local si es necesario
+            }
+        }
+        deletedImages.clear() // Limpia la lista tras procesar las eliminaciones
+    }
+
     private fun saveImages(journalId: String) {
-        selectedImages.forEach { image ->
+        val newImages = selectedImages.filter { it.imageId !in existingImageIds }
+
+        newImages.forEach { image ->
             val localFilePath = saveImageToLocal(Uri.parse(image.filePath), requireContext(), image.imageId)
 
-            // Crear una copia actualizada de la imagen con la ruta local
             val updatedImage = image.copy(
                 journalId = journalId,
                 filePath = localFilePath
             )
+            Log.d("SaveImages", "Guardando nueva imagen: $updatedImage")
 
-            // Enviar la imagen al ViewModel
             imageViewModel.addImageToEntry(journalId, updatedImage)
         }
     }
@@ -234,17 +254,25 @@ class NewJournalFragment : Fragment() {
 
     private fun handleSelectedImages(data: Intent?) {
         data?.let {
+            val newUris = mutableListOf<Uri>()
+
             if (it.clipData != null) {
-                // Múltiples imágenes seleccionadas
                 for (i in 0 until it.clipData!!.itemCount) {
                     val uri = it.clipData!!.getItemAt(i).uri
-                    addImageToSelectedList(uri)
+                    if (selectedImages.none { image -> image.filePath == uri.toString() }) {
+                        newUris.add(uri)
+                    }
                 }
             } else {
-                // Una sola imagen seleccionada
-                it.data?.let { uri -> addImageToSelectedList(uri) }
+                it.data?.let { uri ->
+                    if (selectedImages.none { image -> image.filePath == uri.toString() }) {
+                        newUris.add(uri)
+                    }
+                }
             }
-            imagesAdapter.notifyDataSetChanged() // Actualizar RecyclerView
+
+            newUris.forEach { addImageToSelectedList(it) }
+            imagesAdapter.notifyDataSetChanged()
         }
     }
 
