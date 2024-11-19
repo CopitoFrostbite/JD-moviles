@@ -10,10 +10,12 @@ import androidx.room.ForeignKey
 )
 data class Reminder(
     @PrimaryKey val reminderId: String,
-    val userId: String,
+    val userId: String, // Relación con el usuario
     var description: String,
     var date: Long,
-    val time: String,
+    var time: String, // Cambiado a var para permitir edición
+    var localNotificationId: String? = null, // Para manejar notificaciones locales
     val isEdited: Boolean = false,
-    val isDeleted: Boolean = false
+    val isDeleted: Boolean = false,
+    val updatedAt: Long = System.currentTimeMillis() // Consistencia con User
 )

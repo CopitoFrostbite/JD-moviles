@@ -125,16 +125,22 @@ interface JournalApiService {
     ): Response<Unit>
 
     // Reminder-related endpoints
-    @POST("reminders")
-    suspend fun createReminder(@Body reminder: Reminder): Response<Reminder>
 
-    @GET("reminders/user/{userId}")
-    suspend fun getRemindersByUserId(@Path("userId") userId: String): Response<List<Reminder>>
+    @POST("reminder/create")
+    suspend fun addReminder(@Body reminder: Reminder): Response<Reminder>
 
-    // Settings-related endpoints
-    @POST("settings")
-    suspend fun updateSettings(@Body settings: Settings): Response<Settings>
+    @GET("reminder/user/{userId}")
+    suspend fun getRemindersByUser(@Path("userId") userId: String): Response<List<Reminder>>
 
-    @GET("settings/user/{userId}")
-    suspend fun getSettingsByUserId(@Path("userId") userId: String): Response<Settings>
+    @PUT("reminder/{reminderId}")
+    suspend fun updateReminder(
+        @Path("reminderId") reminderId: String,
+        @Body reminder: Reminder
+    ): Response<Reminder>
+
+    @DELETE("reminder/{reminderId}")
+    suspend fun deleteReminder(@Path("reminderId") reminderId: String): Response<Void>
+
+    @PUT("reminder/{reminderId}/mark_deleted")
+    suspend fun markReminderDeleted(@Path("reminderId") reminderId: String): Response<Reminder>
 }

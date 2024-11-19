@@ -132,9 +132,15 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideReminderRepository(api: JournalApiService, reminderDao: ReminderDao): ReminderRepository {
-        return ReminderRepository(api, reminderDao)
+    fun provideReminderRepository(
+
+        reminderDao: ReminderDao,
+        @ApplicationContext context: Context
+    ): ReminderRepository {
+        return ReminderRepository(reminderDao, context)
     }
+
+
 
     @Singleton
     @Provides
