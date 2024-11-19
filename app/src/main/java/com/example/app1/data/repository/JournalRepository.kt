@@ -4,6 +4,7 @@ import android.content.Context
 
 import android.util.Log
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.example.app1.data.local.ImageDao
 
 import com.example.app1.data.local.JournalEntryDao
@@ -30,7 +31,7 @@ import javax.inject.Inject
 class JournalEntryRepository @Inject constructor(
     private val api: JournalApiService,
     private val journalDao: JournalEntryDao,
-    private val imageRepository: ImageRepository, // Mantener interacción explícita
+
     private val context: Context
 ) {
 
@@ -62,6 +63,18 @@ class JournalEntryRepository @Inject constructor(
             }
         }
         return response
+    }
+
+
+
+    suspend fun updateJournalEntry(journalEntry: JournalEntry): Boolean {
+        return try {
+            journalDao.updateEntry(journalEntry)
+            true
+        } catch (e: Exception) {
+            Log.e("JournalEntryRepository", "Error actualizando entrada", e)
+            false
+        }
     }
 
     suspend fun saveDraft(journalEntry: JournalEntry): Boolean {

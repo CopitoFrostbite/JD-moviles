@@ -21,7 +21,8 @@ class JournalAdapter(
     private var journals: List<JournalEntry>,
     private val onPublishDraft: (JournalEntry) -> Unit,
     private val onJournalClick: (journalId: String) -> Unit,
-    private val onDelete: (journalId: String) -> Unit
+    private val onDelete: (journalId: String) -> Unit,
+    private val onEdit: (journalId: String) -> Unit
 ) : RecyclerView.Adapter<JournalAdapter.JournalViewHolder>() {
 
     private var selectedPosition = -1
@@ -83,7 +84,7 @@ class JournalAdapter(
             onPublishDraft(journal)
         }
         holder.btnEdit.setOnClickListener {
-            // Acción para editar
+            onEdit(journal.journalId)
         }
         holder.btnDelete.setOnClickListener {
             onDelete(journal.journalId) //

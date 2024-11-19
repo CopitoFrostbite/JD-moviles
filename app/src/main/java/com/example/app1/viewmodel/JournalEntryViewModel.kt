@@ -50,6 +50,9 @@ class JournalEntryViewModel @Inject constructor(
     private val _saveJournalState = MutableLiveData<Boolean>()
     val saveJournalState: LiveData<Boolean> get() = _saveJournalState
 
+    private val _updateJournalState = MutableLiveData<Boolean>()
+    val updateJournalState: LiveData<Boolean> get() = _updateJournalState
+
     // Obtener todas las entradas localmente
     fun getUserJournals(userId: String): LiveData<List<JournalEntry>> = liveData {
         emit(journalRepository.getAllJournalEntries(userId))
@@ -99,6 +102,18 @@ class JournalEntryViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e("JournalEntryViewModel", "Error al marcar como eliminado", e)
                 _deleteStatus.postValue(false) // Notifica error
+            }
+        }
+    }
+
+    fun updateJournalEntry(journalEntry: JournalEntry) {
+        viewModelScope.launch {
+            try {
+                val isSuccessful = journalRepository.updateJournalEntry(journalEntry)
+                _updateJournalState.postValue(isSuccessful) // Publicar el resultado en el LiveData
+            } catch (e: Exception) {
+                Log.e("JournalEntryViewModel", "Error al actualizar la entrada", e)
+                _updateJournalState.postValue(false) // Publicar error
             }
         }
     }

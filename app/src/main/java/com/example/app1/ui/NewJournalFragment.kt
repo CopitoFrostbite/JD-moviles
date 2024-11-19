@@ -45,7 +45,7 @@ class NewJournalFragment : Fragment() {
 
     private val journalEntryViewModel: JournalEntryViewModel by viewModels()
     private val imageViewModel: ImageViewModel by viewModels()
-
+    private lateinit var journalId: String
     private val selectedImages = mutableListOf<Image>()
     private lateinit var imagesAdapter: ImagesAdapter
     private lateinit var selectImagesLauncher: ActivityResultLauncher<Intent>
@@ -53,6 +53,18 @@ class NewJournalFragment : Fragment() {
         "Triste" to 1, "Ira" to 2, "Sorpresa" to 3,
         "Miedo" to 4, "Feliz" to 5, "Inconforme" to 6
     )
+
+    companion object {
+        private const val ARG_JOURNAL_ID = "journal_id"
+
+        fun newInstance(journalId: String? = null): NewJournalFragment {
+            val fragment = NewJournalFragment()
+            val args = Bundle()
+            args.putString(ARG_JOURNAL_ID, journalId)
+            fragment.arguments = args
+            return fragment
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -62,12 +74,43 @@ class NewJournalFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        arguments?.getString(ARG_JOURNAL_ID)?.let {
+            journalId = it
+            loadJournalData(journalId)
+            loadJournalImages(journalId)
+        }
+
         setupImageSelector()
         setupRecyclerView(view)
         setupSpinner(view)
         setupAddImageButton(view)
         setupSaveButton(view)
         setupObservers()
+    }
+
+    private fun loadJournalData(journalId: String) {
+        journalEntryViewModel.getJournalEntryById(journalId).observe(viewLifecycleOwner) { journal ->
+            journal?.let {
+                view?.findViewById<EditText>(R.id.etJournalTitle)?.setText(it.title)
+                view?.findViewById<EditText>(R.id.etJournalContent)?.setText(it.content)
+                val spinnerEmotion = view?.findViewById<Spinner>(R.id.spinnerEmotion)
+                spinnerEmotion?.setSelection(getMoodIndex(it.mood))
+            }
+        }
+    }
+
+    private fun getMoodIndex(mood: Int): Int {
+        return moodMapping.values.indexOf(mood).takeIf { it >= 0 } ?: 0
+    }
+
+    private fun loadJournalImages(journalId: String) {
+        imageViewModel.getImagesByJournalId(journalId).observe(viewLifecycleOwner) { images ->
+            images?.let {
+                selectedImages.clear()
+                selectedImages.addAll(it)
+                imagesAdapter.updateImages(selectedImages)
+            }
+        }
     }
 
     private fun setupImageSelector() {
@@ -115,6 +158,7 @@ class NewJournalFragment : Fragment() {
 
     private fun setupSaveButton(view: View) {
         val btnSaveJournal = view.findViewById<Button>(R.id.btnSaveJournal)
+        btnSaveJournal.text = if (::journalId.isInitialized) "Actualizar Diario" else "Guardar Diario"
         btnSaveJournal.setOnClickListener {
             saveJournal(view)
         }
@@ -128,10 +172,10 @@ class NewJournalFragment : Fragment() {
         if (!validateInputs(title, content)) return
 
         val mood = moodMapping[emotion] ?: 1
-        val journalId = UUID.randomUUID().toString()
+
 
         val journalEntry = JournalEntry(
-            journalId = journalId,
+            journalId = if (::journalId.isInitialized) journalId else UUID.randomUUID().toString(),
             userId = PreferencesHelper.getUserId(requireContext()) ?: return,
             title = title,
             content = content,
@@ -140,10 +184,14 @@ class NewJournalFragment : Fragment() {
             isDeleted = false
         )
 
+        if (::journalId.isInitialized) {
+            // Modo edición
+            journalEntryViewModel.updateJournalEntry(journalEntry)
+        } else {
+            // Modo creación
+            journalEntryViewModel.saveDraftJournalEntry(journalEntry)
+        }
 
-
-        // Guardar journal como borrador
-        journalEntryViewModel.saveDraftJournalEntry(journalEntry)
 
         // Guardar imágenes asociadas
         saveImages(journalId)
@@ -173,6 +221,8 @@ class NewJournalFragment : Fragment() {
             imageViewModel.addImageToEntry(journalId, updatedImage)
         }
     }
+
+
 
     private fun validateInputs(title: String, content: String): Boolean {
         if (title.isBlank() || content.isBlank()) {
