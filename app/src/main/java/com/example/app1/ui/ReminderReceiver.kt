@@ -9,6 +9,6 @@ class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         val message = intent?.getStringExtra("MESSAGE")
         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-        // Aquí puedes agregar la lógica para mostrar una notificación en lugar de un toast
+
     }
 }

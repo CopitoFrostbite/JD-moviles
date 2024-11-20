@@ -88,7 +88,7 @@ object AppModule {
         return Retrofit.Builder()
             .baseUrl("https://apimoviles-yha6.onrender.com/api/")
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create(gson))  // Usa Gson personalizado
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
 

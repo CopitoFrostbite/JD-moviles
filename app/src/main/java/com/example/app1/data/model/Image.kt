@@ -23,7 +23,7 @@ data class Image(
     val filePath: String,
     val cloudUrl: String? = null,
     val dateAdded: Long = System.currentTimeMillis(),
-    val isEdited: Boolean = false,
+    val isEdited: Boolean = true,
     val isDeleted: Boolean = false,
     val syncDate: Long? = null
 )

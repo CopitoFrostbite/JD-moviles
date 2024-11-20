@@ -22,10 +22,12 @@ import java.util.Locale
 class JournalAdapter(
     private var journals: List<JournalEntry>,
     private val onPublishDraft: (JournalEntry) -> Unit,
+    private val onSyncImages: (journalId: String) -> Unit,
     private val onJournalClick: (journalId: String) -> Unit,
     private val onDelete: (journalId: String) -> Unit,
     private val onEdit: (journalId: String) -> Unit,
     private val context: Context
+
 ) : RecyclerView.Adapter<JournalAdapter.JournalViewHolder>() {
 
     private var selectedPosition = -1
@@ -85,6 +87,7 @@ class JournalAdapter(
         // Acciones de botones Editar, Eliminar y Publicar
         holder.btnPublish.setOnClickListener {
             onPublishDraft(journal)
+            onSyncImages(journal.journalId)
         }
         holder.btnEdit.setOnClickListener {
             onEdit(journal.journalId)

@@ -33,7 +33,7 @@ object ImageUtils {
                 }
 
                 override fun onLoadCleared(placeholder: Drawable?) {
-                    // Handle the placeholder if needed
+
                 }
             })
     }

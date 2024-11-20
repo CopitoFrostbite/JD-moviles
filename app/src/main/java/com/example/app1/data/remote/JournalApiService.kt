@@ -97,8 +97,16 @@ interface JournalApiService {
 
 
     // Image-related endpoints
+    @Multipart
     @POST("entries/{entryId}/images")
-    suspend fun addImageToEntry(@Path("entryId") entryId: String, @Body image: Image): Response<Image>
+    suspend fun addImageToEntry(
+        @Part("entryId") entryId: RequestBody,
+        @Part imagePart: MultipartBody.Part,
+        @Part("imageId") imageId: RequestBody,
+        @Part("filePath") filePath: RequestBody,
+        @Part("dateAdded") dateAdded: RequestBody,
+        @Part("syncDate") syncDate: RequestBody
+    ): Response<Void>
 
     @GET("image/{journalId}")
     suspend fun getImagesByEntryId(
@@ -120,7 +128,7 @@ interface JournalApiService {
     @Multipart
     @POST("journals/{journalId}/images")
     suspend fun uploadJournalImages(
-        @Path("journalId") journalId: RequestBody,
+        @Path("journalId") journalId: String,
         @Part images: List<MultipartBody.Part>
     ): Response<Unit>
 

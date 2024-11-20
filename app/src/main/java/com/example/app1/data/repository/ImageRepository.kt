@@ -4,8 +4,8 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.LiveData
 import com.example.app1.data.local.ImageDao
-import com.example.app1.data.remote.JournalApiService
 import com.example.app1.data.model.Image
+import com.example.app1.data.remote.JournalApiService
 import com.example.app1.utils.NetworkUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -31,26 +31,60 @@ class ImageRepository @Inject constructor(
 
     // Añadir una imagen a una entrada de journal
     suspend fun addImageToEntry(entryId: String, image: Image): Response<Image> {
-        Log.d("ImageRepository", "Iniciando addImageToEntry para entryId: $entryId")
-        Log.d("ImageRepository", "Datos de la imagen recibida: imageId=${image.imageId}, filePath=${image.filePath}, journalId=${image.journalId}, cloudUrl=${image.cloudUrl}")
-        return if (NetworkUtils.isNetworkAvailable(context)) {
-            try {
-                val response = api.addImageToEntry(entryId, image)
-                if (response.isSuccessful) {
-                    response.body()?.let {
-                        imageDao.insertImage(it.copy(isEdited = false)) // Guardar en Room sin marcar como editado
-                    }
-                }
-                response
-            } catch (e: Exception) {
-                Log.e("ImageRepository", "Error al añadir imagen", e)
-                Response.error(500, "Error al añadir imagen".toResponseBody())
+        return try {
+            // Guardar la imagen localmente marcándola como editada
+            val localImage = image.copy(
+                journalId = entryId,
+
+                syncDate = null
+            )
+            imageDao.insertImage(localImage) // Guardar en la base de datos local
+            Log.d("ImageRepository", "Imagen guardada localmente como editada")
+
+            Response.success(localImage) // Retornar la imagen local como respuesta
+        } catch (e: Exception) {
+            Log.e("ImageRepository", "Error al guardar imagen localmente", e)
+            Response.error(500, "Error al guardar imagen localmente".toResponseBody())
+        }
+    }
+
+    suspend fun publishImageToCloud(entryId: String, image: Image): Response<Void> {
+        return try {
+            // Convertir la imagen a MultipartBody.Part
+            val imageFile = File(image.filePath)
+            val imagePart = MultipartBody.Part.createFormData(
+                "image",
+                imageFile.name,
+                imageFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
+            )
+
+            // Convertir los demás datos de la imagen a RequestBody
+            val journalIdPart = entryId.toRequestBody("text/plain".toMediaTypeOrNull())
+            val imageIdPart = image.imageId.toRequestBody("text/plain".toMediaTypeOrNull())
+            val filePathPart = image.filePath.toRequestBody("text/plain".toMediaTypeOrNull())
+            val dateAddedPart = image.dateAdded.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val syncDatePart = (image.syncDate?.toString() ?: "").toRequestBody("text/plain".toMediaTypeOrNull())
+
+            // Llamar al método de la API para publicar la imagen
+            val response = api.addImageToEntry(
+                entryId = journalIdPart,
+                imagePart = imagePart,
+                imageId = imageIdPart,
+                filePath = filePathPart,
+                dateAdded = dateAddedPart,
+                syncDate = syncDatePart
+            )
+
+            // Verificar si la publicación fue exitosa
+            if (response.isSuccessful) {
+                Log.d("ImageRepository", "Imagen publicada con éxito en la nube")
+            } else {
+                Log.e("ImageRepository", "Error al publicar imagen en la nube: ${response.message()}")
             }
-        } else {
-            // Guardar localmente y marcar como editado
-            val localImage = image.copy(isEdited = true)
-            imageDao.insertImage(localImage)
-            Response.success(localImage)
+            response
+        } catch (e: Exception) {
+            Log.e("ImageRepository", "Error al publicar imagen en la nube", e)
+            Response.error(500, "Error al publicar imagen en la nube".toResponseBody())
         }
     }
 
@@ -105,14 +139,22 @@ class ImageRepository @Inject constructor(
         return try {
             val imageUrl = image.cloudUrl ?: return null
             val url = URL(imageUrl)
-            val connection = url.openConnection()
-            connection.connect()
-            val inputStream = connection.getInputStream()
+            val connection = withContext(Dispatchers.IO) {
+                url.openConnection()
+            }
+            withContext(Dispatchers.IO) {
+                connection.connect()
+            }
+            val inputStream = withContext(Dispatchers.IO) {
+                connection.getInputStream()
+            }
 
             val fileName = "${image.imageId}.jpg"
             val file = File(context.filesDir, fileName)
-            FileOutputStream(file).use { outputStream ->
-                inputStream.copyTo(outputStream)
+            withContext(Dispatchers.IO) {
+                FileOutputStream(file).use { outputStream ->
+                    inputStream.copyTo(outputStream)
+                }
             }
 
             // Actualiza la base de datos local con la ruta del archivo
@@ -145,14 +187,48 @@ class ImageRepository @Inject constructor(
                     retryWithBackoff {
                         try {
                             if (image.isDeleted) {
+                                // Lógica para imágenes marcadas como eliminadas
                                 val deleteResponse = api.deleteImage(image.imageId)
                                 if (deleteResponse.isSuccessful) {
-                                    imageDao.deleteImageById(image.imageId)
+                                    imageDao.deleteImageById(image.imageId) // Borra la imagen de la base de datos local
+                                    Log.d("ImageRepository", "Imagen eliminada en el servidor: ${image.imageId}")
+                                } else {
+                                    Log.e("ImageRepository", "Error al eliminar imagen en el servidor: ${deleteResponse.message()}")
                                 }
                             } else if (image.isEdited) {
-                                val response = api.addImageToEntry(image.journalId, image)
-                                if (response.isSuccessful) {
-                                    imageDao.insertImage(image.copy(isEdited = false))
+                                // Lógica para imágenes editadas: convertir a MultipartBody.Part
+                                val imageFile = File(image.filePath)
+                                if (imageFile.exists()) {
+                                    val imagePart = MultipartBody.Part.createFormData(
+                                        "image",
+                                        imageFile.name,
+                                        imageFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                                    )
+
+                                    // Convertir datos adicionales de Image a RequestBody
+                                    val journalIdPart = image.journalId.toRequestBody("text/plain".toMediaTypeOrNull())
+                                    val imageIdPart = image.imageId.toRequestBody("text/plain".toMediaTypeOrNull())
+                                    val filePathPart = image.filePath.toRequestBody("text/plain".toMediaTypeOrNull())
+                                    val dateAddedPart = image.dateAdded.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+                                    val syncDatePart = (image.syncDate?.toString() ?: "").toRequestBody("text/plain".toMediaTypeOrNull())
+
+                                    // Subir imagen al servidor con datos adicionales
+                                    val response = api.addImageToEntry(
+                                        journalIdPart,
+                                        imagePart,
+                                        imageIdPart,
+                                        filePathPart,
+                                        dateAddedPart,
+                                        syncDatePart
+                                    )
+                                    if (response.isSuccessful) {
+                                        imageDao.insertImage(image.copy(isEdited = false, syncDate = System.currentTimeMillis()))
+                                        Log.d("ImageRepository", "Imagen sincronizada con el servidor: ${image.imageId}")
+                                    } else {
+                                        Log.e("ImageRepository", "Error al sincronizar imagen con el servidor: ${response.message()}")
+                                    }
+                                } else {
+                                    Log.e("ImageRepository", "Archivo de imagen no encontrado: ${image.filePath}")
                                 }
                             }
                         } catch (e: Exception) {
@@ -163,8 +239,7 @@ class ImageRepository @Inject constructor(
             }.awaitAll() // Esperar a que todos los procesos concurrentes finalicen
         }
     }
-
-    // Función para manejar reintentos con backoff exponencial
+    // Función para manejar reintentos
     private suspend fun retryWithBackoff(retries: Int = 3, block: suspend () -> Unit) {
         var attempt = 0
         var delayTime = 1000L // 1 segundo
@@ -177,7 +252,7 @@ class ImageRepository @Inject constructor(
                 attempt++
                 if (attempt >= retries) throw e
                 kotlinx.coroutines.delay(delayTime)
-                delayTime *= 2 // Incremento exponencial
+                delayTime *= 2
             }
         }
     }

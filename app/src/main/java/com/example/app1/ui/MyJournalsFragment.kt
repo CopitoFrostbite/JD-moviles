@@ -39,6 +39,7 @@ import com.example.app1.ui.adapters.JournalAdapter
 import com.example.app1.ui.adapters.SortOptionAdapter
 import com.example.app1.utils.PreferencesHelper
 import com.example.app1.utils.UiState
+import com.example.app1.viewmodel.ImageViewModel
 import com.example.app1.viewmodel.JournalEntryViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -50,6 +51,7 @@ class MyJournalsFragment : Fragment() {
 
     private val journalViewModel: JournalEntryViewModel by viewModels()
     private lateinit var journalAdapter: JournalAdapter
+    private val imageViewModel: ImageViewModel by viewModels()
     private var journalList: List<JournalEntry> = listOf()
     private var isAscendingOrder = true
     private var selectedSortOption: SortOption? = null
@@ -77,6 +79,7 @@ class MyJournalsFragment : Fragment() {
         journalAdapter = JournalAdapter(
             journals = listOf(),
             onPublishDraft = { draft -> journalViewModel.publishJournalEntry(draft) },
+            onSyncImages = { journalId -> syncImagesForJournal(journalId) },
             onJournalClick = { journalId -> showJournalDetails(journalId) },
             onDelete = { journalId ->
                 // Llama a markAsDeleted y pasa el ID directamente
@@ -137,7 +140,7 @@ class MyJournalsFragment : Fragment() {
         journalViewModel.getUserJournals(PreferencesHelper.getUserId(requireContext()) ?: "")
             .observe(viewLifecycleOwner) { journals ->
                 journalList = journals
-                journalAdapter.updateJournals(journalList) // Asegúrate de actualizar el adaptador
+                journalAdapter.updateJournals(journalList)
             }
 
 
@@ -162,6 +165,34 @@ class MyJournalsFragment : Fragment() {
 
         recyclerViewSortOptions.adapter = adapter
         dialog.show()
+    }
+
+    private fun syncImagesForJournal(journalId: String) {
+        imageViewModel.getImagesByJournalId(journalId).observe(viewLifecycleOwner) { images ->
+            if (images.isNullOrEmpty()) {
+                Toast.makeText(requireContext(), "No hay imágenes para sincronizar", Toast.LENGTH_SHORT).show()
+                return@observe
+            }
+
+            images.forEach { image ->
+                imageViewModel.addImageToCloud(journalId, image)
+            }
+
+            // Observa el estado de la subida para retroalimentación
+            imageViewModel.addImageUiState.observe(viewLifecycleOwner) { uiState ->
+                when (uiState) {
+                    is UiState.Success -> {
+                        Toast.makeText(requireContext(), "Imagen subida: ${uiState.data.imageId}", Toast.LENGTH_SHORT).show()
+                    }
+                    is UiState.Error -> {
+                        Toast.makeText(requireContext(), "Error al subir imagen: ${uiState.message}", Toast.LENGTH_SHORT).show()
+                    }
+                    is UiState.Loading -> {
+                        Toast.makeText(requireContext(), "Subiendo imágenes...", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
     }
 
     private fun openEditJournalFragment(journalId: String) {
@@ -299,7 +330,7 @@ class MyJournalsFragment : Fragment() {
             button.alpha = 1.0f // Reset visual feedback
         } else {
             tempFilters.add(filter)
-            button.alpha = 0.5f // Visual feedback to indicate active filter
+            button.alpha = 0.5f
         }
         Toast.makeText(requireContext(), activeMessage, Toast.LENGTH_SHORT).show()
     }

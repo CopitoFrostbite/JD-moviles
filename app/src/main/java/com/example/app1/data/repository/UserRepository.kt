@@ -85,9 +85,9 @@ class UserRepository @Inject constructor(
                             profilePicture = userResponse.profilePicture
                         )
 
-                        userDao.clearUsers() // Clear existing users
+                        userDao.clearUsers()
                         userDao.insertUser(user)
-                        PreferencesHelper.saveUserId(context, user.userId) // Save logged in user's ID
+                        PreferencesHelper.saveUserId(context, user.userId)
                         syncData()
 
                         Response.success(user)

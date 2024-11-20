@@ -52,6 +52,8 @@ class ImageViewModel @Inject constructor(
     }
 
 
+
+
     // Añadir una imagen a un journal
     fun addImageToEntry(entryId: String, image: Image) {
         viewModelScope.launch {
@@ -66,6 +68,23 @@ class ImageViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Log.e("ImageViewModel", "Error al añadir imagen", e)
+            }
+        }
+    }
+
+    fun addImageToCloud(entryId: String, image: Image) {
+        viewModelScope.launch {
+            try {
+                val response = imageRepository.publishImageToCloud(entryId, image)
+                if (response.isSuccessful) {
+                    response.body()?.let {
+                        Log.d("ImageViewModel", "Imagen publicada en la nube: ${response.message()}")
+                    }
+                } else {
+                    Log.e("ImageViewModel", "Error al publicar imagen en la nube: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                Log.e("ImageViewModel", "Error al publicar imagen en la nube", e)
             }
         }
     }

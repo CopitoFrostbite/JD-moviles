@@ -46,7 +46,7 @@ class UserViewModel @Inject constructor(
         lastname: RequestBody,
         email: RequestBody,
         password: RequestBody,
-        avatarPart: MultipartBody.Part?  // Directamente un MultipartBody.Part
+        avatarPart: MultipartBody.Part?
     ): LiveData<Response<User>> {
         val result = MutableLiveData<Response<User>>()
 

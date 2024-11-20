@@ -45,6 +45,7 @@ class NewJournalFragment : Fragment() {
 
     private val journalEntryViewModel: JournalEntryViewModel by viewModels()
     private val imageViewModel: ImageViewModel by viewModels()
+
     private lateinit var journalId: String
     private val selectedImages = mutableListOf<Image>()
     private lateinit var imagesAdapter: ImagesAdapter
@@ -205,12 +206,9 @@ class NewJournalFragment : Fragment() {
         saveImages(journalId) // Guarda solo imágenes nuevas
         deleteImagesFromDatabase()
 
-        if (isConnectedToInternet()) {
-            journalEntryViewModel.publishJournalEntry(journalEntry)
-            imageViewModel.syncImagesWithJournals(listOf(journalId))
-        } else {
-            Toast.makeText(requireContext(), "No hay conexión. El journal se guardó como borrador.", Toast.LENGTH_SHORT).show()
-        }
+
+        Toast.makeText(requireContext(), "El journal se guardó como borrador.", Toast.LENGTH_SHORT).show()
+
 
         navigateToMyJournals()
     }
@@ -220,7 +218,7 @@ class NewJournalFragment : Fragment() {
             imageViewModel.deleteImageById(image.imageId) // Llama al ViewModel para eliminar de la base de datos
             val localFile = File(image.filePath)
             if (localFile.exists()) {
-                localFile.delete() // Opcional: elimina el archivo local si es necesario
+                localFile.delete()
             }
         }
         deletedImages.clear() // Limpia la lista tras procesar las eliminaciones
