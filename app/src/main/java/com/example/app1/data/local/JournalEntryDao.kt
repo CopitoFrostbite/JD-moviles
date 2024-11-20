@@ -29,8 +29,17 @@ interface JournalEntryDao {
     @Query("SELECT * FROM journal_entries WHERE userId = :userId AND isDeleted = 0")
     fun getAllEntriesByUserIdSync(userId: String): LiveData<List<JournalEntry>>
 
+    @Query("SELECT * FROM journal_entries WHERE (isEdited = 1 OR isDeleted = 1 OR isDraft = 1) AND userId = :userId")
+    suspend fun getEntriesForSync(userId: String): List<JournalEntry>
+
     @Query("UPDATE journal_entries SET isDeleted = :isDeleted WHERE journalId = :journalId")
     suspend fun updateJournalDeletionStatus(journalId: String, isDeleted: Boolean)
+
+    @Query("UPDATE journal_entries SET isDraft = :isDraft WHERE journalId = :journalId")
+    suspend fun updateDraftStatus(journalId: String, isDraft: Boolean)
+
+    @Query("UPDATE journal_entries SET isEdited = :isEdited WHERE journalId = :journalId")
+    suspend fun updateEditedStatus(journalId: String, isEdited: Boolean)
 
     @Update
     suspend fun updateEntry(journalEntry: JournalEntry)

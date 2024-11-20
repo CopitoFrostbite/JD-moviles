@@ -72,15 +72,17 @@ interface JournalApiService {
         @Body journalRequest: JournalRequest
     ): Response<JournalEntry>
 
-    @FormUrlEncoded
-    @PUT("journal/{entryId}/update")
+    @PUT("/journals/{journalId}")
     suspend fun updateJournalEntry(
-        @Path("entryId") entryId: String,
-        @Field("title") title: String,
-        @Field("content") content: String,
-        @Field("date") date: Long,
-        @Field("isDeleted") isDeleted: Boolean
+        @Path("journalId") journalId: String,
+        @Body journalRequest: JournalRequest
     ): Response<JournalEntry>
+
+    @PUT("/journals/{journalId}/delete")
+    suspend fun updateJournalDeleteFlag(
+        @Path("journalId") journalId: String,
+        @Query("isDeleted") isDeleted: Boolean
+    ): Response<Unit>
 
     @GET("journal/{entryId}")
     suspend fun getJournalEntryById(@Path("entryId") entryId: String): Response<JournalEntry>

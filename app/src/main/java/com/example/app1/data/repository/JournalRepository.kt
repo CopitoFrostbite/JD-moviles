@@ -55,12 +55,9 @@ class JournalEntryRepository @Inject constructor(
         val response = api.registerJournalEntry(journalRequest)
         if (response.isSuccessful) {
             val journalId = journalRequest.journalId
-            // Marcar como publicado (isDraft = false)
-            val journalEntry = journalDao.getEntryById(journalId)
-            journalEntry?.let {
-                it.isDraft = false
-                journalDao.insertEntry(it) // Actualizar entrada local
-            }
+
+
+            journalDao.updateDraftStatus(journalId, isDraft = false)
         }
         return response
     }
@@ -89,6 +86,19 @@ class JournalEntryRepository @Inject constructor(
         }
     }
 
+    private fun JournalEntry.toJournalRequest(): JournalApiService.JournalRequest {
+        return JournalApiService.JournalRequest(
+            journalId = this.journalId,
+            userId = this.userId,
+            title = this.title,
+            content = this.content,
+            mood = this.mood,
+            date = this.date,
+            isEdited = this.isEdited,
+            isDeleted = this.isDeleted
+        )
+    }
+
     suspend fun updateLocalJournalDeletionStatus(journalId: String, isDeleted: Boolean) {
         journalDao.updateJournalDeletionStatus(journalId, isDeleted)
     }
@@ -112,6 +122,42 @@ class JournalEntryRepository @Inject constructor(
         if (!NetworkUtils.isNetworkAvailable(context)) return false
 
         return try {
+            // 1. Subir journals locales marcados como isEdited, isDeleted o isDraft
+            val entriesForSync = journalDao.getEntriesForSync(userId)
+            for (entry in entriesForSync) {
+                val journalRequest = entry.toJournalRequest() // Convertir JournalEntry a JournalRequest
+                val response = when {
+                    entry.isDeleted -> {
+                        // Actualizar solo el flag isDeleted en la nube
+                        api.updateJournalDeleteFlag(entry.journalId, isDeleted = true)
+                    }
+                    entry.isEdited -> {
+
+                        api.updateJournalEntry(entry.journalId, journalRequest)
+                    }
+                    else -> {
+                        // manejar como borrador
+
+                        publishJournalEntry(journalRequest)
+                    }
+                }
+
+
+                if (response.isSuccessful) {
+                    when {
+                        entry.isDraft -> {
+                            // Si es borrador, marcarlo como no borrador
+                            journalDao.updateDraftStatus(entry.journalId, isDraft = false)
+                        }
+                        entry.isEdited -> {
+                            // Si está editado, marcarlo como no editado
+                            journalDao.updateEditedStatus(entry.journalId, isEdited = false)
+                        }
+                    }
+                }
+            }
+
+            // 2. Descargar journals de la nube a local
             val response = api.getAllJournalEntries(userId)
             if (response.isSuccessful) {
                 val cloudEntries = response.body()?.filter { !it.isDeleted } ?: emptyList()
