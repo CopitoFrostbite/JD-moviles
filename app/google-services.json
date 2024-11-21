@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "653326055957",
+    "project_id": "pmovil-d3710",
+    "storage_bucket": "pmovil-d3710.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:653326055957:android:8968493be39d36690bec1c",
+        "android_client_info": {
+          "package_name": "com.example.app1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBGLFVdCRY2n00ku2KjZDDv1WaTFdUs4UY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

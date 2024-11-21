@@ -3,20 +3,17 @@ package com.example.app1.ui.adapters
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
-import android.graphics.Color
 import android.icu.text.SimpleDateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.app1.R
 import com.example.app1.data.model.JournalEntry
 import com.example.app1.utils.JournalDiffCallback
-
 import java.util.Locale
 
 class JournalAdapter(

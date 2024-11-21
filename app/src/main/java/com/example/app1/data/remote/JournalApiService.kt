@@ -48,6 +48,9 @@ interface JournalApiService {
     @POST("user/login")
     suspend fun loginUser(@Body credentials: Map<String, String>): Response<User>
 
+    @POST("user/update-password")
+    suspend fun updatePassword(@Body passwordData: Map<String, String>): Response<Unit>
+
     @GET("user/{userId}")
     suspend fun getUserById(@Path("userId") userId: String): Response<User>
 
@@ -84,18 +87,12 @@ interface JournalApiService {
         @Query("isDeleted") isDeleted: Boolean
     ): Response<Unit>
 
-    @GET("journal/{entryId}")
-    suspend fun getJournalEntryById(@Path("entryId") entryId: String): Response<JournalEntry>
+
 
     @GET("journals/{userId}")
     suspend fun getAllJournalEntries(
         @Path("userId") userId: String
     ): Response<List<JournalEntry>>
-
-    @PUT("journal/{entryId}")
-    suspend fun markJournalEntryAsDeleted(
-        @Path("entryId") entryId: String
-    ): Response<JournalEntry>
 
 
     // Image-related endpoints
@@ -120,44 +117,7 @@ interface JournalApiService {
         @Path("imageId") imageId: String
     ): Response<Image>
 
-    @DELETE("image/{imageId}")
-    suspend fun deleteImage(
-        @Path("imageId") imageId: String
-    ): Response<Void>
 
 
 
-    @Multipart
-    @POST("journals/{journalId}/images")
-    suspend fun uploadJournalImages(
-        @Path("journalId") journalId: String,
-        @Part images: List<MultipartBody.Part>
-    ): Response<Unit>
-
-    // Reminder-related endpoints
-
-    @POST("reminder/create")
-    suspend fun addReminder(@Body reminder: Reminder): Response<Reminder>
-
-    @GET("reminder/user/{userId}")
-    suspend fun getRemindersByUser(@Path("userId") userId: String): Response<List<Reminder>>
-
-    @PUT("reminder/{reminderId}")
-    suspend fun updateReminder(
-        @Path("reminderId") reminderId: String,
-        @Body reminder: Reminder
-    ): Response<Reminder>
-
-    @DELETE("reminder/{reminderId}")
-    suspend fun deleteReminder(@Path("reminderId") reminderId: String): Response<Void>
-
-    @PUT("reminder/{reminderId}/mark_deleted")
-    suspend fun markReminderDeleted(@Path("reminderId") reminderId: String): Response<Reminder>
-
-    // Settings-related endpoints
-    @POST("settings")
-    suspend fun updateSettings(@Body settings: Settings): Response<Settings>
-
-    @GET("settings/user/{userId}")
-    suspend fun getSettingsByUserId(@Path("userId") userId: String): Response<Settings>
 }

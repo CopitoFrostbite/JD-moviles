@@ -2,11 +2,9 @@ package com.example.app1.di
 
 import android.content.Context
 import androidx.room.Room
-
 import com.example.app1.data.local.*
 import com.example.app1.data.remote.JournalApiService
 import com.example.app1.data.repository.*
-
 import com.example.app1.ui.adapters.LongDateTypeAdapter
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -19,7 +17,6 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.util.Date
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 

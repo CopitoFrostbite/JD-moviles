@@ -2,7 +2,6 @@ package com.example.app1.ui
 
 import android.net.Uri
 import android.os.Bundle
-import android.provider.OpenableColumns
 import android.util.Log
 import android.util.Patterns
 import android.view.LayoutInflater
@@ -16,20 +15,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import com.example.app1.R
-import com.example.app1.data.model.User
 import com.example.app1.viewmodel.UserViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import retrofit2.Response
 import java.io.File
 import java.io.FileOutputStream
-import java.io.InputStream
+
 
 
 @AndroidEntryPoint

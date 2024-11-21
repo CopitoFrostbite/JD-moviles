@@ -1,9 +1,7 @@
 package com.example.app1.ui
 
 import android.os.Bundle
-import android.view.MenuItem
 import android.view.View
-import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
@@ -14,7 +12,6 @@ import com.example.app1.R
 import com.example.app1.viewmodel.UserViewModel
 import com.google.android.material.navigation.NavigationView
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class Home : AppCompatActivity() {
@@ -34,8 +31,6 @@ class Home : AppCompatActivity() {
             if (user != null) {
                 // Actualiza el TextView con el nombre del usuario
                 val headerView = navigationView.getHeaderView(0)
-
-            } else {
 
             }
         })
@@ -98,6 +93,11 @@ class Home : AppCompatActivity() {
             R.id.nav_item_three -> {
                 supportFragmentManager.commit {
                     replace(R.id.fragment_container, UserProfileFragment())
+                }
+            }
+            R.id.nav_item_four -> {
+                supportFragmentManager.commit {
+                    replace(R.id.fragment_container, ReminderFragment())
                 }
             }
         }

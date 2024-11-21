@@ -5,15 +5,9 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.util.Log
-import androidx.lifecycle.LiveData
 import com.example.app1.data.local.ReminderDao
-import com.example.app1.data.remote.JournalApiService
 import com.example.app1.data.model.Reminder
 import com.example.app1.ui.AlarmReceiver
-import com.example.app1.utils.NetworkUtils
-import okhttp3.ResponseBody.Companion.toResponseBody
-import retrofit2.Response
 import java.util.Calendar
 import java.util.UUID
 import javax.inject.Inject

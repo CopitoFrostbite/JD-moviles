@@ -1,26 +1,19 @@
 package com.example.app1.ui
 
 import android.annotation.SuppressLint
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.ProgressBar
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.app1.R
-import com.example.app1.data.model.Image
-import com.example.app1.data.model.JournalEntry
 import com.example.app1.ui.adapters.ImagesAdapter
-import com.example.app1.utils.UiState
 import com.example.app1.viewmodel.ImageViewModel
 import com.example.app1.viewmodel.JournalEntryViewModel
 import dagger.hilt.android.AndroidEntryPoint

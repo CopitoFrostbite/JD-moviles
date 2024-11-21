@@ -8,20 +8,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
-import androidx.work.*
 import com.example.app1.data.model.User
-import com.example.app1.data.remote.JournalApiService
-
 import com.example.app1.data.repository.UserRepository
 import com.example.app1.utils.PreferencesHelper
-import com.example.app1.workers.SyncWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-
 import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.Response
 import java.io.File
@@ -61,17 +56,15 @@ class UserViewModel @Inject constructor(
         return result
     }
 
-    private fun uriToFile(uri: Uri): File {
-        val contentResolver = getApplication<Application>().contentResolver
-        val fileName = uri.lastPathSegment ?: "temp_image"
-        val tempFile = File(getApplication<Application>().cacheDir, fileName)
-        contentResolver.openInputStream(uri)?.use { inputStream ->
-            FileOutputStream(tempFile).use { outputStream ->
-                inputStream.copyTo(outputStream)
-            }
+    fun updatePassword(userId: String, currentPassword: String, newPassword: String): LiveData<Response<Unit>> {
+        val result = MutableLiveData<Response<Unit>>()
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = userRepository.updatePassword(userId, currentPassword, newPassword)
+            result.postValue(response)
         }
-        return tempFile
+        return result
     }
+
 
     fun loginUser(email: String, password: String): MutableLiveData<Response<User>?> {
         val result = MutableLiveData<Response<User>?>()
@@ -167,10 +160,5 @@ class UserViewModel @Inject constructor(
         }
     }
 
-    fun syncData() {
-        viewModelScope.launch(Dispatchers.IO) {
-            userRepository.syncData()
-        }
-    }
 
 }

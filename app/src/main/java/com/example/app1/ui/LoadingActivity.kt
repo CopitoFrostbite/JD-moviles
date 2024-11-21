@@ -2,11 +2,9 @@ package com.example.app1.ui
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import com.example.app1.R
 import com.example.app1.viewmodel.UserViewModel

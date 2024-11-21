@@ -1,31 +1,21 @@
 package com.example.app1.viewmodel
 
 import android.app.Application
-import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
-import androidx.work.*
-import com.example.app1.data.model.Image
 import com.example.app1.data.model.JournalEntry
-import com.example.app1.data.model.JournalWithImages
 import com.example.app1.data.model.extensions.toRequest
-import com.example.app1.data.remote.JournalApiService
-import com.example.app1.data.repository.ImageRepository
 import com.example.app1.data.repository.JournalEntryRepository
-import com.example.app1.utils.UiState
-import com.example.app1.workers.SyncWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.ResponseBody
 import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.Response
-import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel

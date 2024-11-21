@@ -5,18 +5,12 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.example.app1.data.model.Image
 import com.example.app1.data.repository.ImageRepository
 import com.example.app1.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.ResponseBody.Companion.toResponseBody
-import retrofit2.Response
 import javax.inject.Inject
 
 @HiltViewModel
@@ -111,18 +105,4 @@ class ImageViewModel @Inject constructor(
         }
     }
 
-    // Descargar y guardar imágenes localmente
-    fun downloadImage(image: Image) {
-        viewModelScope.launch {
-            try {
-                val context = getApplication<Application>().applicationContext
-                val filePath = imageRepository.downloadAndSaveImageLocally(context, image)
-                if (filePath != null) {
-                    Log.d("ImageViewModel", "Imagen guardada localmente: $filePath")
-                }
-            } catch (e: Exception) {
-                Log.e("ImageViewModel", "Error al descargar la imagen", e)
-            }
-        }
-    }
 }

@@ -31,8 +31,6 @@ interface ReminderDao {
     @Query("UPDATE reminders SET isDeleted = :isDeleted WHERE reminderId = :reminderId")
     suspend fun markReminderAsDeleted(reminderId: String, isDeleted: Boolean = true)
 
-    @Query("SELECT * FROM reminders WHERE isEdited = 1 OR isDeleted = 1 ORDER BY updatedAt DESC")
-    suspend fun getPendingSyncReminders(): List<Reminder>
 
     @Query("DELETE FROM reminders WHERE userId = :userId")
     suspend fun clearRemindersForUser(userId: String)

@@ -88,10 +88,7 @@ class ImageRepository @Inject constructor(
         }
     }
 
-    // Obtener imágenes de una entrada de journal desde Room
-    suspend fun addImages(images: List<Image>) {
-        imageDao.insertImages(images)
-    }
+
 
     fun getImagesByJournalId(journalId: String): LiveData<List<Image>> {
         return imageDao.getImagesByJournalId(journalId)
@@ -107,16 +104,6 @@ class ImageRepository @Inject constructor(
     }
 
 
-    // Marcar imagen como eliminada (delete lógico)
-    suspend fun markImageAsDeleted(imageId: String) {
-        imageDao.markImageAsDeleted(imageId)
-        Log.d("ImageRepository", "Imagen marcada como eliminada: $imageId")
-    }
-
-    // Obtener imágenes pendientes de sincronizar (editadas o eliminadas)
-    private suspend fun getPendingSyncImages(): List<Image> {
-        return imageDao.getPendingSyncImages()
-    }
 
     suspend fun downloadAndSaveImageLocally(context: Context, image: Image): String? {
         return try {

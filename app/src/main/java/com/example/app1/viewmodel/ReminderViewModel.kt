@@ -4,8 +4,6 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.example.app1.data.model.Reminder
 import com.example.app1.data.repository.ReminderRepository
@@ -43,7 +41,7 @@ class ReminderViewModel @Inject constructor(
         }
     }
 
-    fun loadReminders(userId: String) {
+    private fun loadReminders(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val reminderList = reminderRepository.getRemindersForUser(userId)

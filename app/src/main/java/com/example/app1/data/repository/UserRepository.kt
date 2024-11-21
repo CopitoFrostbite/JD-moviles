@@ -4,20 +4,14 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.liveData
 import com.example.app1.data.local.UserDao
 import com.example.app1.data.model.User
 import com.example.app1.data.remote.JournalApiService
 import com.example.app1.utils.NetworkUtils
 import com.example.app1.utils.PreferencesHelper
-import kotlinx.coroutines.Dispatchers
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.Response
 import java.io.File
@@ -117,6 +111,30 @@ class UserRepository @Inject constructor(
         }
     }
 
+    suspend fun updatePassword(userId: String, currentPassword: String, newPassword: String): Response<Unit> {
+        return if (NetworkUtils.isNetworkAvailable(context)) {
+            try {
+                val passwordData = mapOf(
+                    "userId" to userId,
+                    "currentPassword" to currentPassword,
+                    "newPassword" to newPassword
+                )
+                api.updatePassword(passwordData)
+            } catch (e: Exception) {
+                Log.e("UserRepository", "Error updating password", e)
+                Response.error(
+                    500,
+                    "Error during password update".toResponseBody("text/plain".toMediaTypeOrNull())
+                )
+            }
+        } else {
+            Response.error(
+                503,
+                "No network available".toResponseBody("text/plain".toMediaTypeOrNull())
+            )
+        }
+    }
+
     suspend fun logoutUser() {
         userDao.clearUsers()
         PreferencesHelper.clearUserId(context)
@@ -168,12 +186,6 @@ class UserRepository @Inject constructor(
         userDao.updateUser(user)
         PreferencesHelper.saveUserId(context, user.userId)
     }
-
-    // Obtener el único usuario de la DB local
-    suspend fun getLocalUser(): User? {
-        return userDao.getSingleUserSync()
-    }
-
 
     suspend fun updateUserData(user: User): Response<User> {
         return if (NetworkUtils.isNetworkAvailable(context)) {
@@ -277,14 +289,4 @@ class UserRepository @Inject constructor(
         }
     }
 
-    private fun getFileName(uri: Uri): String {
-        var name = "temp_file"
-        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            if (cursor.moveToFirst()) {
-                name = cursor.getString(nameIndex)
-            }
-        }
-        return name
-    }
 }

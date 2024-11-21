@@ -13,9 +13,9 @@ data class Reminder(
     val userId: String, // Relación con el usuario
     var description: String,
     var date: Long,
-    var time: String, // Cambiado a var para permitir edición
+    var time: String,
     var localNotificationId: String? = null, // Para manejar notificaciones locales
     val isEdited: Boolean = false,
     val isDeleted: Boolean = false,
-    val updatedAt: Long = System.currentTimeMillis() // Consistencia con User
+    val updatedAt: Long = System.currentTimeMillis()
 )

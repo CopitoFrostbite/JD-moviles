@@ -6,8 +6,8 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import com.example.app1.R
-import com.example.app1.data.model.User
 import com.example.app1.viewmodel.UserViewModel
+import com.google.firebase.FirebaseApp
 
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -19,7 +19,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        FirebaseApp.initializeApp(this)
         userViewModel.getCurrentUser().observe(this, Observer { user ->
             if (user != null) {
                 // Usuario encontrado, iniciar sesión automáticamente y transicionar a NewJournal
