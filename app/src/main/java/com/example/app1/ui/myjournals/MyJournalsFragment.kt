@@ -1,4 +1,4 @@
-package com.example.app1.ui
+package com.example.app1.ui.myjournals
 
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.app1.R
 import com.example.app1.SortOption
 import com.example.app1.data.model.JournalEntry
+import com.example.app1.ui.newjournal.NewJournalFragment
 import com.example.app1.ui.adapters.JournalAdapter
 import com.example.app1.ui.adapters.SortOptionAdapter
 import com.example.app1.utils.PreferencesHelper

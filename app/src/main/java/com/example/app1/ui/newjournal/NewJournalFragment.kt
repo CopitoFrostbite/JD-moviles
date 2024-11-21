@@ -1,9 +1,8 @@
-package com.example.app1.ui
+package com.example.app1.ui.newjournal
 
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -26,6 +25,7 @@ import com.example.app1.R
 import com.example.app1.data.model.Image
 import com.example.app1.data.model.JournalEntry
 import com.example.app1.ui.adapters.ImagesAdapter
+import com.example.app1.ui.myjournals.MyJournalsFragment
 import com.example.app1.utils.PreferencesHelper
 import com.example.app1.viewmodel.ImageViewModel
 import com.example.app1.viewmodel.JournalEntryViewModel

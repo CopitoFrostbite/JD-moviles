@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:openDrawer="start"
-    tools:context=".ui.Home">
+    tools:context=".ui.main.Home">
 
     <!-- The main content view -->
     <FrameLayout

@@ -1,4 +1,4 @@
-package com.example.app1.ui
+package com.example.app1.ui.myjournals
 
 import android.annotation.SuppressLint
 import android.os.Bundle

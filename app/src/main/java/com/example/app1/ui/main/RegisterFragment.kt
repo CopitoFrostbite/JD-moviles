@@ -1,4 +1,4 @@
-package com.example.app1.ui
+package com.example.app1.ui.main
 
 import android.net.Uri
 import android.os.Bundle

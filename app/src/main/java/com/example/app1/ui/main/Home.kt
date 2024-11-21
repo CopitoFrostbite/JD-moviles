@@ -1,4 +1,4 @@
-package com.example.app1.ui
+package com.example.app1.ui.main
 
 import android.os.Bundle
 import android.view.View
@@ -9,6 +9,10 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.commit
 import androidx.lifecycle.Observer
 import com.example.app1.R
+import com.example.app1.ui.myjournals.MyJournalsFragment
+import com.example.app1.ui.newjournal.NewJournalFragment
+import com.example.app1.ui.ReminderFragment
+import com.example.app1.ui.profile.UserProfileFragment
 import com.example.app1.viewmodel.UserViewModel
 import com.google.android.material.navigation.NavigationView
 import dagger.hilt.android.AndroidEntryPoint
