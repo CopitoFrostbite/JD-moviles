@@ -4,6 +4,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.util.Log
+import android.util.Patterns
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -150,15 +151,63 @@ class RegisterFragment : Fragment() {
         }
     }
 
-    private fun validateInputs(email: String, password: String, repeatPassword: String, username: String, name: String, lastname: String): Boolean {
+    private fun validateInputs(
+        email: String,
+        password: String,
+        repeatPassword: String,
+        username: String,
+        name: String,
+        lastname: String
+    ): Boolean {
         if (email.isBlank() || password.isBlank() || repeatPassword.isBlank() || username.isBlank() || name.isBlank() || lastname.isBlank()) {
             Toast.makeText(requireContext(), "Todos los campos son obligatorios", Toast.LENGTH_SHORT).show()
             return false
         }
+
+        // Validar formato del email
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            Toast.makeText(requireContext(), "El email no es válido", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        // Validar fuerza de la contraseña
+        val passwordPattern = Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]{8,}\$")
+        if (!passwordPattern.matches(password)) {
+            Toast.makeText(
+                requireContext(),
+                "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número",
+                Toast.LENGTH_SHORT
+            ).show()
+            return false
+        }
+
+        // Validar que las contraseñas coincidan
         if (password != repeatPassword) {
             Toast.makeText(requireContext(), "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
             return false
         }
+
+        // Validar tamaño del nombre y apellidos
+        if (name.length < 2 || name.length > 50) {
+            Toast.makeText(requireContext(), "El nombre debe tener entre 2 y 50 caracteres", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        if (lastname.length < 2 || lastname.length > 50) {
+            Toast.makeText(requireContext(), "Los apellidos deben tener entre 2 y 50 caracteres", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        // Validar formato del username
+        val usernamePattern = Regex("^[a-zA-Z0-9_]{3,20}\$")
+        if (!usernamePattern.matches(username)) {
+            Toast.makeText(
+                requireContext(),
+                "El nombre de usuario debe tener entre 3 y 20 caracteres y solo puede contener letras, números y guiones bajos",
+                Toast.LENGTH_SHORT
+            ).show()
+            return false
+        }
+
         return true
     }
 }

@@ -417,7 +417,29 @@ class MyJournalsFragment : Fragment() {
             Toast.makeText(requireContext(), "Usuario no encontrado. Por favor, inicia sesión.", Toast.LENGTH_SHORT).show()
             return
         }
+
         journalViewModel.syncAllEntries(userId)
+        val journalIds = journalList.map { it.journalId }
+        Log.d("SyncAllEntries", "User ID: $userId")
+        Log.d("SyncAllEntries", "Journal IDs: $journalIds")
+
+        // Sincroniza las imágenes asociadas a los journals
+        imageViewModel.syncImages(userId, journalIds)
+
+        // Observa el estado de la sincronización para retroalimentación
+        imageViewModel.syncUiState.observe(viewLifecycleOwner) { uiState ->
+            when (uiState) {
+                is UiState.Loading -> {
+                    Toast.makeText(requireContext(), "Sincronizando imágenes...", Toast.LENGTH_SHORT).show()
+                }
+                is UiState.Success -> {
+                    Toast.makeText(requireContext(), "Sincronización completada.", Toast.LENGTH_SHORT).show()
+                }
+                is UiState.Error -> {
+                    Toast.makeText(requireContext(), "Error en la sincronización: ${uiState.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     private fun isConnectedToInternet(): Boolean {

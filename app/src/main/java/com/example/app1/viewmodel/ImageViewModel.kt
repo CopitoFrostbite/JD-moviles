@@ -90,27 +90,23 @@ class ImageViewModel @Inject constructor(
     }
 
 
-    // Sincronizar imágenes de journals específicos
-    fun syncImagesWithJournals(journalIds: List<String>) {
-        _syncUiState.postValue(UiState.Loading)
-        viewModelScope.launch {
-            try {
-                imageRepository.syncImages(journalIds)
-                _syncUiState.postValue(UiState.Success(Unit))
-            } catch (e: Exception) {
-                Log.e("SyncViewModel", "Error al sincronizar imágenes: ${e.localizedMessage}", e)
-                _syncUiState.postValue(UiState.Error("Error al sincronizar imágenes", e))
-            }
-        }
-    }
 
-    fun syncImages(journalIds: List<String>) {
+
+    fun syncImages(userId: String, journalIds: List<String>) {
+        _syncUiState.postValue(UiState.Loading) // Notifica que la sincronización ha comenzado
+
         viewModelScope.launch {
             try {
-                imageRepository.syncImages(journalIds)
-                Log.d("ImageViewModel", "Imágenes sincronizadas con journals: $journalIds")
+                // Llamar al método optimizado del repositorio
+                imageRepository.syncImages(userId, journalIds)
+
+                // Notificar éxito
+                _syncUiState.postValue(UiState.Success(Unit))
+                Log.d("ImageViewModel", "Imágenes sincronizadas con journals: $journalIds para usuario: $userId")
             } catch (e: Exception) {
+                // Manejar errores y notificar a la UI
                 Log.e("ImageViewModel", "Error al sincronizar imágenes", e)
+                _syncUiState.postValue(UiState.Error("Error al sincronizar imágenes", e))
             }
         }
     }

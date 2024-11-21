@@ -111,7 +111,7 @@ interface JournalApiService {
     ): Response<Void>
 
     @GET("image/{journalId}")
-    suspend fun getImagesByEntryId(
+    suspend fun getImagesByUserId(
         @Path("journalId") journalId: String
     ): Response<List<Image>>
 

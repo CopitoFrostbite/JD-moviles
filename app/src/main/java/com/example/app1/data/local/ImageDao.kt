@@ -38,9 +38,18 @@ interface ImageDao {
     @Query("DELETE FROM images WHERE imageId = :imageId")
     suspend fun deleteImageById(imageId: String)
 
+    @Query("DELETE FROM images WHERE imageId IN (:imageIds)")
+    suspend fun deleteImagesByIds(imageIds: List<String>)
+
     // Obtener imágenes con cambios pendientes
     @Query("SELECT * FROM images WHERE isEdited = 1 OR isDeleted = 1")
     suspend fun getPendingSyncImages(): List<Image>
+
+    @Query("UPDATE images SET isEdited = 0 WHERE imageId IN (:imageIds)")
+    suspend fun markImagesAsSynced(imageIds: List<String>)
+
+    @Query("UPDATE images SET isDeleted = 0 WHERE imageId IN (:imageIds)")
+    suspend fun unmarkImagesAsDeleted(imageIds: List<String>)
 
     @Query("UPDATE images SET isDeleted = 1 WHERE imageId = :imageId")
     suspend fun markImageAsDeleted(imageId: String)

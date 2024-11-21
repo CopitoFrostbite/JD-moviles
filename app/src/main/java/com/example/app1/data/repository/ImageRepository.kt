@@ -35,7 +35,7 @@ class ImageRepository @Inject constructor(
             // Guardar la imagen localmente marcándola como editada
             val localImage = image.copy(
                 journalId = entryId,
-
+                isEdited = true,
                 syncDate = null
             )
             imageDao.insertImage(localImage) // Guardar en la base de datos local
@@ -106,23 +106,6 @@ class ImageRepository @Inject constructor(
         }
     }
 
-    // Obtener imágenes desde la API
-    suspend fun getImagesByEntryIdFromApi(entryId: String): Response<List<Image>> {
-        return try {
-            val response = api.getImagesByEntryId(entryId)
-            if (response.isSuccessful) {
-                response.body()?.let { images ->
-                    images.forEach { image ->
-                        imageDao.insertImage(image.copy(isEdited = false)) // Guardar en Room
-                    }
-                }
-            }
-            response
-        } catch (e: Exception) {
-            Log.e("ImageRepository", "Error al obtener imágenes de la API", e)
-            Response.error(500, "Error al obtener imágenes".toResponseBody())
-        }
-    }
 
     // Marcar imagen como eliminada (delete lógico)
     suspend fun markImageAsDeleted(imageId: String) {
@@ -167,36 +150,37 @@ class ImageRepository @Inject constructor(
     }
 
     // Sincronizar imágenes pendientes
-    suspend fun syncImages(journalIds: List<String>? = null) {
-        // Verificar la conexión antes de proceder
+    suspend fun syncImages(userId: String, journalIds: List<String>? = null) {
         if (!NetworkUtils.isNetworkAvailable(context)) {
             Log.e("ImageRepository", "Sin conexión a Internet. Sincronización cancelada.")
             return
         }
 
         val pendingImages = withContext(Dispatchers.IO) {
-            journalIds?.let { ids ->
+            userId.let { ids ->
                 imageDao.getPendingSyncImages().filter { it.journalId in ids }
-            } ?: imageDao.getPendingSyncImages()
+            }
         }
 
-        // Procesar imágenes en paralelo
-        withContext(Dispatchers.IO) {
-            pendingImages.map { image ->
-                async {
-                    retryWithBackoff {
-                        try {
+        if (pendingImages.isEmpty()) {
+            Log.d("ImageRepository", "No hay imágenes pendientes de sincronización.")
+        } else {
+            val successfullySyncedImages = mutableListOf<String>()
+            val successfullyDeletedImages = mutableListOf<String>()
+
+            withContext(Dispatchers.IO) {
+                pendingImages.map { image ->
+                    async {
+                        retryWithBackoff {
                             if (image.isDeleted) {
-                                // Lógica para imágenes marcadas como eliminadas
-                                val deleteResponse = api.deleteImage(image.imageId)
+                                val deleteResponse = api.markImageAsDeleted(image.imageId)
                                 if (deleteResponse.isSuccessful) {
-                                    imageDao.deleteImageById(image.imageId) // Borra la imagen de la base de datos local
-                                    Log.d("ImageRepository", "Imagen eliminada en el servidor: ${image.imageId}")
+                                    successfullyDeletedImages.add(image.imageId)
+                                    Log.d("ImageRepository", "Imagen eliminada del servidor: ${image.imageId}")
                                 } else {
-                                    Log.e("ImageRepository", "Error al eliminar imagen en el servidor: ${deleteResponse.message()}")
+                                    Log.e("ImageRepository", "Error al eliminar imagen: ${deleteResponse.message()}")
                                 }
                             } else if (image.isEdited) {
-                                // Lógica para imágenes editadas: convertir a MultipartBody.Part
                                 val imageFile = File(image.filePath)
                                 if (imageFile.exists()) {
                                     val imagePart = MultipartBody.Part.createFormData(
@@ -204,15 +188,12 @@ class ImageRepository @Inject constructor(
                                         imageFile.name,
                                         imageFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
                                     )
-
-                                    // Convertir datos adicionales de Image a RequestBody
                                     val journalIdPart = image.journalId.toRequestBody("text/plain".toMediaTypeOrNull())
                                     val imageIdPart = image.imageId.toRequestBody("text/plain".toMediaTypeOrNull())
                                     val filePathPart = image.filePath.toRequestBody("text/plain".toMediaTypeOrNull())
                                     val dateAddedPart = image.dateAdded.toString().toRequestBody("text/plain".toMediaTypeOrNull())
                                     val syncDatePart = (image.syncDate?.toString() ?: "").toRequestBody("text/plain".toMediaTypeOrNull())
 
-                                    // Subir imagen al servidor con datos adicionales
                                     val response = api.addImageToEntry(
                                         journalIdPart,
                                         imagePart,
@@ -222,21 +203,56 @@ class ImageRepository @Inject constructor(
                                         syncDatePart
                                     )
                                     if (response.isSuccessful) {
-                                        imageDao.insertImage(image.copy(isEdited = false, syncDate = System.currentTimeMillis()))
+                                        successfullySyncedImages.add(image.imageId)
                                         Log.d("ImageRepository", "Imagen sincronizada con el servidor: ${image.imageId}")
                                     } else {
-                                        Log.e("ImageRepository", "Error al sincronizar imagen con el servidor: ${response.message()}")
+                                        Log.e("ImageRepository", "Error sincronizando imagen: ${response.message()}")
                                     }
                                 } else {
-                                    Log.e("ImageRepository", "Archivo de imagen no encontrado: ${image.filePath}")
+                                    Log.e("ImageRepository", "Archivo no encontrado: ${image.filePath}")
                                 }
                             }
-                        } catch (e: Exception) {
-                            Log.e("ImageRepository", "Error al sincronizar imagen: ${image.imageId}", e)
                         }
                     }
+                }.awaitAll()
+
+                // Actualizar solo las banderas en la base de datos local
+                if (successfullySyncedImages.isNotEmpty()) {
+                    imageDao.markImagesAsSynced(successfullySyncedImages)
                 }
-            }.awaitAll() // Esperar a que todos los procesos concurrentes finalicen
+                if (successfullyDeletedImages.isNotEmpty()) {
+                    imageDao.unmarkImagesAsDeleted(successfullyDeletedImages)
+                }
+            }
+        }
+
+
+
+        if (journalIds != null) {
+            withContext(Dispatchers.IO) {
+                try {
+                    journalIds.forEach { journalId ->
+                        val response = api.getImagesByUserId(journalId)
+
+
+                        Log.d("ImageRepository", "Journal ID: $journalId")
+                        Log.d("ImageRepository", "Response Code: ${response.code()}")
+                        Log.d("ImageRepository", "Response Message: ${response.message()}")
+                        Log.d("ImageRepository", "Response Body: ${response.body()}")
+
+                        if (response.isSuccessful) {
+                            response.body()?.let { downloadedImages ->
+                                imageDao.insertImages(downloadedImages.map { it.copy(isEdited = false, isDeleted = false) })
+                                Log.d("ImageRepository", "Imágenes descargadas y guardadas localmente para el journal: $journalId")
+                            }
+                        } else {
+                            Log.e("ImageRepository", "Error al descargar imágenes para el journalId: $journalId, Message: ${response.message()}")
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("ImageRepository", "Error al descargar imágenes del usuario: $userId", e)
+                }
+            }
         }
     }
     // Función para manejar reintentos
