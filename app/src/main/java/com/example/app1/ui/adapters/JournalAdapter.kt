@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.app1.R
@@ -53,7 +54,10 @@ class JournalAdapter(
         holder.title.text = journal.title
         holder.date.text = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(journal.date)
         holder.time.text = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(journal.date)
-        holder.mood.text = "Mood: " + getMoodText(journal.mood)
+        holder.mood.text = " " + getMoodText(journal.mood) + " "
+
+        val moodColor = getMoodColor(journal.mood)
+        holder.mood.setBackgroundColor(ContextCompat.getColor(context, moodColor))
 
         // Cambiar el color de fondo y la visibilidad del label de borrador
                 if (journal.isDraft) {
@@ -123,6 +127,18 @@ class JournalAdapter(
             5 -> "Feliz"
             6 -> "Inconforme"
             else -> "Desconocido"
+        }
+    }
+
+    private fun getMoodColor(mood: Int): Int {
+        return when (mood) {
+            1 -> R.color.sad_color         // Triste
+            2 -> R.color.angry_color       // Ira
+            3 -> R.color.surprise_color    // Sorpresa
+            4 -> R.color.fear_color        // Miedo
+            5 -> R.color.happy_color       // Feliz
+            6 -> R.color.discontent_color  // Inconforme
+            else -> R.color.unknown_color  // Desconocido
         }
     }
 }

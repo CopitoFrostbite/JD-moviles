@@ -1,8 +1,10 @@
 package com.example.app1.ui.main
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -13,6 +15,7 @@ import com.example.app1.ui.myjournals.MyJournalsFragment
 import com.example.app1.ui.newjournal.NewJournalFragment
 import com.example.app1.ui.ReminderFragment
 import com.example.app1.ui.profile.UserProfileFragment
+import com.example.app1.utils.PreferencesHelper
 import com.example.app1.viewmodel.UserViewModel
 import com.google.android.material.navigation.NavigationView
 import dagger.hilt.android.AndroidEntryPoint
@@ -104,8 +107,38 @@ class Home : AppCompatActivity() {
                     replace(R.id.fragment_container, ReminderFragment())
                 }
             }
+            R.id.nav_item_seven -> {
+                showInitialConfirmationDialog()
+            }
         }
 
         drawer.closeDrawer(GravityCompat.START)
+    }
+
+    private fun showInitialConfirmationDialog() {
+        val dialog = CustomConfirmationDialogFragment(
+            title = "Advertencia",
+            message = "Debes sincronizar tus datos en la nube, ya que se perderán al cerrar sesión. ¿Deseas continuar?",
+            onConfirm = {
+                // Mostrar segunda confirmación
+                showFinalConfirmationDialog()
+            }
+        )
+        dialog.show(supportFragmentManager, "InitialConfirmationDialog")
+    }
+
+    private fun showFinalConfirmationDialog() {
+        val dialog = CustomConfirmationDialogFragment(
+            title = "Confirmar cierre de sesión",
+            message = "Esta acción eliminará tus datos locales y te llevará a la pantalla de inicio de sesión. ¿Estás seguro?",
+            onConfirm = {
+                // Borrar SharedPreferences y redirigir al Login
+                PreferencesHelper.clearUserId(this)
+                val intent = Intent(this, LoginFragment::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+            }
+        )
+        dialog.show(supportFragmentManager, "FinalConfirmationDialog")
     }
 }

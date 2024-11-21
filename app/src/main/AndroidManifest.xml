@@ -17,8 +17,9 @@
         android:label="app 1"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.App1"
+        android:theme="@style/AppTheme"
         tools:targetApi="31">
+
 
 
         <activity android:name="SetReminder" />

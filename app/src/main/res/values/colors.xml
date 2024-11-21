@@ -9,6 +9,7 @@
     <color name="primary_text_color">#000000</color>
     <color name="secondary_text_color">#757575</color>
     <color name="accent_color">#FF4081</color>
+    <color name="alert_color">#FF5252</color>
     <color name="dialog_background">#F5F5F5</color>
     <color name="button_background">#6200EE</color>
     <color name="button_default_color">#6200EE</color> <!-- Color normal del botón -->
@@ -17,4 +18,12 @@
     <color name="card_default_color">#FFFFFF</color> <!-- Color por defecto de la tarjeta -->
     <color name="card_pressed_color">#FFEBEE</color> <!-- Color cuando se presiona la tarjeta -->
     <color name="card_selected_color">#FFCDD2</color> <!-- Color cuando la tarjeta está seleccionada -->
+
+    <color name="sad_color">#87CEEB</color>        <!-- Azul claro -->
+    <color name="angry_color">#FF4500</color>      <!-- Naranja fuerte -->
+    <color name="surprise_color">#FFD700</color>   <!-- Amarillo -->
+    <color name="fear_color">#9400D3</color>       <!-- Morado oscuro -->
+    <color name="happy_color">#32CD32</color>      <!-- Verde claro -->
+    <color name="discontent_color">#FFA500</color> <!-- Naranja -->
+    <color name="unknown_color">#B0C4DE</color>    <!-- Azul grisáceo -->
 </resources>

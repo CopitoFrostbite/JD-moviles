@@ -65,6 +65,7 @@ class NavigationDrawerFragment : Fragment(), NavigationView.OnNavigationItemSele
             R.id.nav_item_two -> Toast.makeText(requireContext(), "New Journal", Toast.LENGTH_SHORT).show()
             R.id.nav_item_three -> Toast.makeText(requireContext(), "Profile", Toast.LENGTH_SHORT).show()
             R.id.nav_item_four -> Toast.makeText(requireContext(), "Reminder", Toast.LENGTH_SHORT).show()
+            R.id.nav_item_seven -> Toast.makeText(requireContext(), "Logout", Toast.LENGTH_SHORT).show()
         }
 
         drawer.closeDrawer(GravityCompat.START)

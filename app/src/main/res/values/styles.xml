@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tema base de la aplicación -->
+    <style name="AppTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Colores principales personalizados -->
+        <item name="colorPrimary">@color/myPrimary</item>
+        <item name="colorSecondary">@color/mySecondary</item>
+        <item name="colorAccent">@color/accent_color</item>
+        <item name="android:colorBackground">@color/regular_background</item>
+        <item name="android:textColorPrimary">@color/primary_text_color</item>
+        <item name="android:textColorSecondary">@color/secondary_text_color</item>
+    </style>
+
+    <!-- Estilo para diálogos personalizados -->
+    <style name="ThemeOverlay.Material3.Dialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="android:background">@color/dialog_background</item>
+        <item name="android:textColorPrimary">@color/alert_color</item>
+        <item name="android:textColorSecondary">@color/secondary_text_color</item>
+
+
+    </style>
+
+    <!-- Estilo para botones -->
+    <style name="ButtonStyle" parent="Widget.Material3.Button">
+        <item name="android:background">@color/button_default_color</item>
+        <item name="android:colorControlHighlight">@color/button_pressed_color</item>
+        <item name="android:colorControlActivated">@color/button_focused_color</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+
+</resources>
