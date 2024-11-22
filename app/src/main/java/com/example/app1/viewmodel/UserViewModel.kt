@@ -105,7 +105,10 @@ class UserViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val response = userRepository.updateProfileImage(userId, avatarPart)
             if (response.isSuccessful) {
-                response.body()?.let { downloadAndSaveProfileImage(it) }
+                response.body()?.let { user ->
+
+                    downloadAndSaveProfileImage(user)
+                }
             }
             result.postValue(response)
         }
@@ -138,12 +141,7 @@ class UserViewModel @Inject constructor(
         }
     }
 
-    fun logout() {
-        viewModelScope.launch(Dispatchers.IO) {
-            userRepository.logoutUser()
-            _user.postValue(null) // Limpia el usuario actual
-        }
-    }
+
     fun createGuestUser() {
         val guestUser = User(
             userId = "guest",

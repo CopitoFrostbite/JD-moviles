@@ -14,6 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.app1.R
 import com.example.app1.data.model.User
 import com.example.app1.utils.PreferencesHelper
@@ -182,6 +183,7 @@ class UserProfileFragment : Fragment() {
 
         userViewModel.updateProfileImage(userId, avatarPart).observe(viewLifecycleOwner) { response ->
             if (response.isSuccessful) {
+
                 Toast.makeText(requireContext(), "Imagen de perfil actualizada", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(requireContext(), "Error al subir la imagen", Toast.LENGTH_SHORT).show()
@@ -195,11 +197,17 @@ class UserProfileFragment : Fragment() {
 
         if (!localPath.isNullOrBlank() && File(localPath).exists()) {
             // Carga desde la ruta local
-            Glide.with(this).load(File(localPath)).into(profileImage)
+            Glide.with(this)
+                .load(File(localPath))
+                .skipMemoryCache(true) // Evita usar memoria caché
+                .diskCacheStrategy(DiskCacheStrategy.NONE) // Evita caché en disco
+                .into(profileImage)
         } else if (!remoteUrl.isNullOrBlank()) {
             // Carga desde la URL remota y guarda localmente
             Glide.with(this)
                 .load(remoteUrl)
+                .skipMemoryCache(true)
+                .diskCacheStrategy(DiskCacheStrategy.NONE)
                 .into(profileImage)
                 .clearOnDetach()
         } else {
