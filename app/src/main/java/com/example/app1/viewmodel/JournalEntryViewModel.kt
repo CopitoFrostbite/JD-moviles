@@ -1,6 +1,7 @@
 package com.example.app1.viewmodel
 
 import android.app.Application
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -10,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.app1.data.model.JournalEntry
 import com.example.app1.data.model.extensions.toRequest
 import com.example.app1.data.repository.JournalEntryRepository
+import com.example.app1.utils.PreferencesHelper
 import com.example.app1.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -73,6 +75,8 @@ class JournalEntryViewModel @Inject constructor(
         }
     }
 
+
+
     // Publicar una entrada de diario
     fun publishJournalEntry(journalEntry: JournalEntry) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -83,6 +87,18 @@ class JournalEntryViewModel @Inject constructor(
                 _createJournalEntryLiveData.postValue(
                     Response.error(500, "Error al publicar entrada".toResponseBody("text/plain".toMediaTypeOrNull()))
                 )
+            }
+        }
+    }
+
+    fun refreshJournals(context: Context) {
+        val userId = PreferencesHelper.getUserId(context) ?: return
+        viewModelScope.launch {
+            try {
+                val updatedJournals = journalRepository.getAllJournalEntries(userId) // Recupera la lista actualizada
+                _journalList.postValue(updatedJournals)
+            } catch (e: Exception) {
+                Log.e("ViewModel", "Error al actualizar journals: ${e.message}")
             }
         }
     }

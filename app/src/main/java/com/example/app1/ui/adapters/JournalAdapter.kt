@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.icu.text.SimpleDateFormat
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -89,6 +90,8 @@ class JournalAdapter(
         holder.btnPublish.setOnClickListener {
             onPublishDraft(journal)
             onSyncImages(journal.journalId)
+            holder.btnPublish.visibility = if (journal.isDraft) View.VISIBLE else View.GONE
+            Log.d("Adapter", "Journal isDraft: ${journal.isDraft}")
         }
         holder.btnEdit.setOnClickListener {
             onEdit(journal.journalId)

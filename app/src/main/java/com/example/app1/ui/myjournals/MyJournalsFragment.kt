@@ -76,6 +76,8 @@ class MyJournalsFragment : Fragment() {
             onPublishDraft = { draft ->
                 journalViewModel.publishJournalEntry(draft) // Llama al ViewModel
                 Toast.makeText(requireContext(), "Publicando entrada...", Toast.LENGTH_SHORT).show()
+
+                journalAdapter.updateJournals(journalList)
             },
             onSyncImages = { journalId -> syncImagesForJournal(journalId) },
             onJournalClick = { journalId -> showJournalDetails(journalId) },
@@ -478,19 +480,20 @@ class MyJournalsFragment : Fragment() {
     private fun observePublishLiveData() {
         journalViewModel.createJournalEntryLiveData.observe(viewLifecycleOwner) { response ->
             if (response.isSuccessful) {
-                val publishedJournal = response.body() ?: return@observe
-                // Encuentra el índice del Journal publicado en la lista
-                val index = journalList.indexOfFirst { it.journalId == publishedJournal.journalId }
-                if (index != -1) {
-                    // Actualiza la lista local y notifica al adaptador
-                    journalList = journalList.toMutableList().apply {
-                        this[index] = publishedJournal
-                    }
-                    journalAdapter.notifyItemChanged(index)
-                    Toast.makeText(requireContext(), "Entrada publicada con éxito", Toast.LENGTH_SHORT).show()
-                }
+                Toast.makeText(requireContext(), "Entrada publicada con éxito", Toast.LENGTH_SHORT).show()
+
+                // Llama a refreshJournals pasando el Context
+                journalViewModel.refreshJournals(requireContext())
             } else {
                 Toast.makeText(requireContext(), "Error al publicar: ${response.message()}", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        journalViewModel.journalList.observe(viewLifecycleOwner) { updatedJournalList ->
+            if (!updatedJournalList.isNullOrEmpty()) {
+                journalList = updatedJournalList
+                journalAdapter.updateJournals(journalList)
+                Log.d("MyJournalsFragment", "Lista de journals actualizada: $journalList")
             }
         }
     }
