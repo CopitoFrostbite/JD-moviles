@@ -86,22 +86,13 @@ class ImageViewModel @Inject constructor(
 
 
 
-    fun syncImages(userId: String, journalIds: List<String>) {
-        _syncUiState.postValue(UiState.Loading) // Notifica que la sincronización ha comenzado
-
-        viewModelScope.launch {
-            try {
-                // Llamar al método optimizado del repositorio
-                imageRepository.syncImages(userId, journalIds)
-
-                // Notificar éxito
-                _syncUiState.postValue(UiState.Success(Unit))
-                Log.d("ImageViewModel", "Imágenes sincronizadas con journals: $journalIds para usuario: $userId")
-            } catch (e: Exception) {
-                // Manejar errores y notificar a la UI
-                Log.e("ImageViewModel", "Error al sincronizar imágenes", e)
-                _syncUiState.postValue(UiState.Error("Error al sincronizar imágenes", e))
-            }
+    suspend fun syncImages(userId: String, journalIds: List<String>): UiState<Unit> {
+        return try {
+            imageRepository.syncImages(userId, journalIds) // Realiza la sincronización
+            UiState.Success(Unit) // Devuelve éxito
+        } catch (e: Exception) {
+            Log.e("ImageViewModel", "Error al sincronizar imágenes", e)
+            UiState.Error("Error al sincronizar imágenes", e) // Devuelve error
         }
     }
 

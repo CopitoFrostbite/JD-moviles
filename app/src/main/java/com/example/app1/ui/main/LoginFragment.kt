@@ -95,7 +95,7 @@ class LoginFragment : Fragment() {
                 response.body()?.let { user ->
                     userViewModel.setUser(user)
 
-                    Toast.makeText(requireContext(), "Login exitoso", Toast.LENGTH_SHORT).show()
+
 
                     startActivity(Intent(requireContext(), Home::class.java))
                     activity?.finish()

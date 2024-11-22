@@ -105,7 +105,7 @@ class ImageRepository @Inject constructor(
 
 
 
-    suspend fun downloadAndSaveImageLocally(context: Context, image: Image): String? {
+    private suspend fun downloadAndSaveImageLocally(context: Context, image: Image): String? {
         return try {
             val imageUrl = image.cloudUrl ?: return null
             val url = URL(imageUrl)
@@ -217,27 +217,34 @@ class ImageRepository @Inject constructor(
 
         if (journalIds != null) {
             withContext(Dispatchers.IO) {
-                try {
-                    journalIds.forEach { journalId ->
+                journalIds.forEach { journalId ->
+                    try {
                         val response = api.getImagesByUserId(journalId)
-
-
-                        Log.d("ImageRepository", "Journal ID: $journalId")
-                        Log.d("ImageRepository", "Response Code: ${response.code()}")
-                        Log.d("ImageRepository", "Response Message: ${response.message()}")
-                        Log.d("ImageRepository", "Response Body: ${response.body()}")
 
                         if (response.isSuccessful) {
                             response.body()?.let { downloadedImages ->
+                                downloadedImages.forEach { downloadedImage ->
+                                    val localFilePath = downloadedImage.filePath?.let { File(it) }
+                                    if (localFilePath == null || !localFilePath.exists()) {
+                                        // Descargar imagen si el filepath local no existe
+                                        val newFilePath = downloadAndSaveImageLocally(context, downloadedImage)
+                                        if (newFilePath != null) {
+                                            val updatedImage = downloadedImage.copy(filePath = newFilePath, isEdited = false, isDeleted = false)
+                                            imageDao.insertImage(updatedImage)
+                                        } else {
+                                            Log.e("ImageRepository", "Error descargando la imagen desde la nube: ${downloadedImage.imageId}")
+                                        }
+                                    }
+                                }
                                 imageDao.insertImages(downloadedImages.map { it.copy(isEdited = false, isDeleted = false) })
                                 Log.d("ImageRepository", "Imágenes descargadas y guardadas localmente para el journal: $journalId")
                             }
                         } else {
                             Log.e("ImageRepository", "Error al descargar imágenes para el journalId: $journalId, Message: ${response.message()}")
                         }
+                    } catch (e: Exception) {
+                        Log.e("ImageRepository", "Error al descargar imágenes del usuario: $userId", e)
                     }
-                } catch (e: Exception) {
-                    Log.e("ImageRepository", "Error al descargar imágenes del usuario: $userId", e)
                 }
             }
         }

@@ -116,6 +116,7 @@ class JournalAdapter(
         val diffResult = DiffUtil.calculateDiff(diffCallback)
         journals = newJournals
         diffResult.dispatchUpdatesTo(this)
+
     }
 
     private fun getMoodText(mood: Int): String {

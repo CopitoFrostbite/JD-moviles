@@ -79,8 +79,8 @@ class JournalEntryRepository @Inject constructor(
     }
 
     // Sincronizar todas las entradas con la nube
-    suspend fun syncAllEntries(userId: String): Boolean {
-        if (!NetworkUtils.isNetworkAvailable(context)) return false
+    suspend fun syncAllEntries(userId: String): List<JournalEntry> {
+        if (!NetworkUtils.isNetworkAvailable(context)) return emptyList()
 
         return try {
             // 1. Subir journals locales marcados como isEdited, isDeleted o isDraft
@@ -123,13 +123,13 @@ class JournalEntryRepository @Inject constructor(
             if (response.isSuccessful) {
                 val cloudEntries = response.body()?.filter { !it.isDeleted } ?: emptyList()
                 journalDao.insertAll(cloudEntries) // Sobrescribir datos locales con los de la nube
-                true
+                cloudEntries
             } else {
-                false
+                emptyList()
             }
         } catch (e: Exception) {
             Log.e("JournalEntryRepository", "Error sincronizando entradas", e)
-            false
+            emptyList()
         }
     }
 

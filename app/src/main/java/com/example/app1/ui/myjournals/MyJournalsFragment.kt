@@ -2,6 +2,7 @@ package com.example.app1.ui.myjournals
 
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
+import android.app.ProgressDialog
 import android.content.Context
 import android.net.ConnectivityManager
 import android.os.Bundle
@@ -18,6 +19,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.app1.R
@@ -26,6 +28,7 @@ import com.example.app1.data.model.JournalEntry
 import com.example.app1.ui.newjournal.NewJournalFragment
 import com.example.app1.ui.adapters.JournalAdapter
 import com.example.app1.ui.adapters.SortOptionAdapter
+import com.example.app1.ui.main.LoadingDialogFragment
 import com.example.app1.utils.PreferencesHelper
 import com.example.app1.utils.UiState
 import com.example.app1.viewmodel.ImageViewModel
@@ -33,6 +36,8 @@ import com.example.app1.viewmodel.JournalEntryViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 @AndroidEntryPoint
@@ -45,6 +50,7 @@ class MyJournalsFragment : Fragment() {
     private var isAscendingOrder = true
     private var selectedSortOption: SortOption? = null
     private lateinit var fabSort: FloatingActionButton
+    private var loadingDialog: LoadingDialogFragment? = null
     private lateinit var fabSortDirection: ImageView
     private val sortOptions = listOf(
         SortOption("Nombre", R.drawable.ic_sort_name),
@@ -67,7 +73,10 @@ class MyJournalsFragment : Fragment() {
 // Configura el RecyclerView y el Adaptador
         journalAdapter = JournalAdapter(
             journals = listOf(),
-            onPublishDraft = { draft -> journalViewModel.publishJournalEntry(draft) },
+            onPublishDraft = { draft ->
+                journalViewModel.publishJournalEntry(draft) // Llama al ViewModel
+                Toast.makeText(requireContext(), "Publicando entrada...", Toast.LENGTH_SHORT).show()
+            },
             onSyncImages = { journalId -> syncImagesForJournal(journalId) },
             onJournalClick = { journalId -> showJournalDetails(journalId) },
             onDelete = { journalId ->
@@ -96,7 +105,7 @@ class MyJournalsFragment : Fragment() {
         fabSort = view.findViewById(R.id.fabSort)
         fabSortDirection = view.findViewById(R.id.fabSortDirection)
         updateSortDirectionIcon(isAscendingOrder)
-
+        observePublishLiveData()
         // Listener para el FAB de ordenar
         view.findViewById<FloatingActionButton>(R.id.fabSort).setOnClickListener {
             showSortBottomSheet()
@@ -110,12 +119,15 @@ class MyJournalsFragment : Fragment() {
         // Botón de sincronización manual que verifica la conexión a internet antes de sincronizar todos los journals
         view.findViewById<FloatingActionButton>(R.id.fabSync).setOnClickListener {
             if (isConnectedToInternet()) {
+
                 syncAllEntries()  // Llama a la función de sincronización manual en el ViewModel
                 Toast.makeText(requireContext(), "Sincronización en proceso...", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(requireContext(), "Conexión a internet no disponible", Toast.LENGTH_SHORT).show()
             }
         }
+
+
         // Observa el resultado de la sincronización
         journalViewModel.syncStatus.observe(viewLifecycleOwner) { result ->
             if (result) {
@@ -393,9 +405,6 @@ class MyJournalsFragment : Fragment() {
     }
 
 
-    // Función para convertir el estado de ánimo a texto
-
-
     private fun showJournalDetails(journalId: String) {
         JournalDetailFragment.newInstance(journalId).show(parentFragmentManager, "JournalDetail")
     }
@@ -406,27 +415,44 @@ class MyJournalsFragment : Fragment() {
             Toast.makeText(requireContext(), "Usuario no encontrado. Por favor, inicia sesión.", Toast.LENGTH_SHORT).show()
             return
         }
-
-        journalViewModel.syncAllEntries(userId)
-        val journalIds = journalList.map { it.journalId }
-        Log.d("SyncAllEntries", "User ID: $userId")
-        Log.d("SyncAllEntries", "Journal IDs: $journalIds")
-
-        // Sincroniza las imágenes asociadas a los journals
-        imageViewModel.syncImages(userId, journalIds)
-
-        // Observa el estado de la sincronización para retroalimentación
-        imageViewModel.syncUiState.observe(viewLifecycleOwner) { uiState ->
-            when (uiState) {
-                is UiState.Loading -> {
-                    Toast.makeText(requireContext(), "Sincronizando imágenes...", Toast.LENGTH_SHORT).show()
+        showLoadingDialog()
+        lifecycleScope.launch {
+            try {
+                // Sincronizar journals
+                Toast.makeText(requireContext(), "Sincronizando journals...", Toast.LENGTH_SHORT).show()
+                val journalState = journalViewModel.syncAllEntries(userId)
+                if (journalState is UiState.Error) {
+                    Toast.makeText(requireContext(), "Error al sincronizar journals: ${journalState.message}", Toast.LENGTH_SHORT).show()
+                    return@launch
                 }
-                is UiState.Success -> {
-                    Toast.makeText(requireContext(), "Sincronización completada.", Toast.LENGTH_SHORT).show()
+
+                // Observar cambios en journalList
+                journalViewModel.journalList.observe(viewLifecycleOwner) { updatedJournalList ->
+                    if (!updatedJournalList.isNullOrEmpty()) {
+
+                        val journalIds = updatedJournalList.map { it.journalId }
+                        Log.d("SyncAllEntries", "Journals actualizados: $journalIds")
+
+                        // Sincronizar imágenes después de obtener journals actualizados
+                        lifecycleScope.launch {
+                            Toast.makeText(requireContext(), "Sincronizando imágenes...", Toast.LENGTH_SHORT).show()
+                            val imageState = imageViewModel.syncImages(userId, journalIds)
+                            if (imageState is UiState.Error) {
+                                Toast.makeText(requireContext(), "Error al sincronizar imágenes: ${imageState.message}", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(requireContext(), "Sincronización completada.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        journalList = updatedJournalList // Actualiza la lista local
+                        journalAdapter.updateJournals(journalList)
+                    }
                 }
-                is UiState.Error -> {
-                    Toast.makeText(requireContext(), "Error en la sincronización: ${uiState.message}", Toast.LENGTH_SHORT).show()
-                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Error en la sincronización: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e("SyncAllEntries", "Error en la sincronización", e)
+            } finally {
+                delay(500)
+                hideLoadingDialog()
             }
         }
     }
@@ -435,5 +461,37 @@ class MyJournalsFragment : Fragment() {
         val connectivityManager = context?.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val activeNetwork = connectivityManager.activeNetworkInfo
         return activeNetwork != null && activeNetwork.isConnected
+    }
+
+    private fun showLoadingDialog() {
+        if (loadingDialog == null) {
+            loadingDialog = LoadingDialogFragment()
+            loadingDialog?.show(parentFragmentManager, "LoadingDialog")
+        }
+    }
+
+    private fun hideLoadingDialog() {
+        loadingDialog?.dismiss()
+        loadingDialog = null
+    }
+
+    private fun observePublishLiveData() {
+        journalViewModel.createJournalEntryLiveData.observe(viewLifecycleOwner) { response ->
+            if (response.isSuccessful) {
+                val publishedJournal = response.body() ?: return@observe
+                // Encuentra el índice del Journal publicado en la lista
+                val index = journalList.indexOfFirst { it.journalId == publishedJournal.journalId }
+                if (index != -1) {
+                    // Actualiza la lista local y notifica al adaptador
+                    journalList = journalList.toMutableList().apply {
+                        this[index] = publishedJournal
+                    }
+                    journalAdapter.notifyItemChanged(index)
+                    Toast.makeText(requireContext(), "Entrada publicada con éxito", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(requireContext(), "Error al publicar: ${response.message()}", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }

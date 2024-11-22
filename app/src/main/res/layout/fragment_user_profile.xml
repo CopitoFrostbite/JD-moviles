@@ -98,7 +98,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Editar Información"
+            android:text="Actualizar Información"
             android:textStyle="bold"
             android:layout_marginBottom="16dp"
             android:textSize="16sp"
@@ -161,7 +161,7 @@
             android:id="@+id/btn_edit_profile"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
-            android:text="Editar información"
+            android:text="Actualizar información"
             android:layout_marginTop="16dp" />
     </LinearLayout>
 </ScrollView>

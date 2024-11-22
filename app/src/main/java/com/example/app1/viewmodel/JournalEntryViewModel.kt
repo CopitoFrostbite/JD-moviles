@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.app1.data.model.JournalEntry
 import com.example.app1.data.model.extensions.toRequest
 import com.example.app1.data.repository.JournalEntryRepository
+import com.example.app1.utils.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -34,14 +35,17 @@ class JournalEntryViewModel @Inject constructor(
     private val _deleteStatus = MutableLiveData<Boolean>()
     val deleteStatus: LiveData<Boolean> get() = _deleteStatus
 
-    private val _publishStatus = MutableLiveData<Response<JournalEntry>>()
-    val publishStatus: LiveData<Response<JournalEntry>> get() = _publishStatus
 
     private val _saveJournalState = MutableLiveData<Boolean>()
-    val saveJournalState: LiveData<Boolean> get() = _saveJournalState
+
 
     private val _updateJournalState = MutableLiveData<Boolean>()
-    val updateJournalState: LiveData<Boolean> get() = _updateJournalState
+
+
+    private val _journalList = MutableLiveData<List<JournalEntry>>()
+    val journalList: LiveData<List<JournalEntry>> get() = _journalList
+
+
 
     // Obtener todas las entradas localmente
     fun getUserJournals(userId: String): LiveData<List<JournalEntry>> = liveData {
@@ -54,10 +58,18 @@ class JournalEntryViewModel @Inject constructor(
     }
 
     // Sincronizar todas las entradas con la nube
-    fun syncAllEntries(userId: String) {
-        viewModelScope.launch {
-            val result = journalRepository.syncAllEntries(userId)
-            _syncStatus.postValue(result)
+    suspend fun syncAllEntries(userId: String): UiState<Unit> {
+        return try {
+            val syncedJournals = journalRepository.syncAllEntries(userId) // Sincroniza y obtiene los journals
+            if (syncedJournals.isNotEmpty()) {
+                _journalList.postValue(syncedJournals) // Actualiza el LiveData
+                UiState.Success(Unit)
+            } else {
+                UiState.Error("No se pudieron sincronizar las entradas.")
+            }
+        } catch (e: Exception) {
+            Log.e("JournalViewModel", "Error al sincronizar journals", e)
+            UiState.Error("Error al sincronizar journals", e)
         }
     }
 
@@ -107,4 +119,6 @@ class JournalEntryViewModel @Inject constructor(
             }
         }
     }
+
+
 }

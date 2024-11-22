@@ -132,7 +132,16 @@ class UserProfileFragment : Fragment() {
             profilePicture = userViewModel.user.value?.profilePicture
         )
 
-        userViewModel.updateUserData(updatedUser)
+
+        Toast.makeText(requireContext(), "Actualizando datos del perfil...", Toast.LENGTH_SHORT).show()
+
+        userViewModel.updateUserData(updatedUser).observe(viewLifecycleOwner) { response ->
+            if (response.isSuccessful) {
+                Toast.makeText(requireContext(), "Perfil actualizado con éxito", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(requireContext(), "Error al actualizar el perfil", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun isInputValid(): Boolean {
@@ -168,7 +177,16 @@ class UserProfileFragment : Fragment() {
             file.asRequestBody("image/jpeg".toMediaTypeOrNull())
         )
 
-        userViewModel.updateProfileImage(userId, avatarPart)
+
+        Toast.makeText(requireContext(), "Subiendo imagen de perfil...", Toast.LENGTH_SHORT).show()
+
+        userViewModel.updateProfileImage(userId, avatarPart).observe(viewLifecycleOwner) { response ->
+            if (response.isSuccessful) {
+                Toast.makeText(requireContext(), "Imagen de perfil actualizada", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(requireContext(), "Error al subir la imagen", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun loadProfileImage(user: User) {
