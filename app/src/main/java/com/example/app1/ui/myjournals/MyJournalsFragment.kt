@@ -192,6 +192,8 @@ class MyJournalsFragment : Fragment() {
                     }
                     is UiState.Loading -> {
                         Toast.makeText(requireContext(), "Subiendo imágenes...", Toast.LENGTH_SHORT).show()
+                    }else->{
+
                     }
                 }
             }
